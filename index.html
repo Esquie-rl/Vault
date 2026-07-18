@@ -205,6 +205,24 @@ nav.scrolled .nav-inner{
 .dl-card .btn{position:relative}
 .dl-note{font-size:13px;color:var(--t3);margin-top:20px;position:relative}
 
+/* tiktok hq patcher */
+[hidden]{display:none!important}
+.tk-card{max-width:640px;margin:0 auto;border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:14px}
+.tk-drop{border:1.5px dashed var(--hairline-strong);border-radius:var(--r-sm);padding:40px 24px;text-align:center;cursor:pointer;color:var(--t2);font-size:15px;
+  transition:border-color .25s,background .25s,color .25s}
+.tk-drop:hover,.tk-drop.over{border-color:var(--accent-2);background:var(--accent-soft);color:var(--t1)}
+.tk-drop svg{width:36px;height:36px;margin:0 auto 12px;color:var(--accent-2)}
+.tk-drop .hint{font-size:12.5px;color:var(--t3);margin-top:7px}
+.tk-fileinfo{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--glass);border:1px solid var(--hairline);border-radius:14px;padding:14px 18px}
+.tk-fileinfo .lab{font-size:13.5px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-fileinfo .val{font-size:13.5px;color:var(--accent-2);flex-shrink:0}
+.tk-btn{width:100%;justify-content:center}
+.btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+.tk-log{background:rgba(0,0,0,.28);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:14px 18px;font-size:12.5px;line-height:1.8;max-height:240px;overflow:auto;color:var(--t2);word-break:break-word}
+.tk-log .ok{color:var(--green)}
+.tk-log .err{color:#FF5F57}
+.tk-log .dim{color:var(--t3)}
+
 /* faq */
 .faq-list{max-width:760px;margin:40px auto 0;display:flex;flex-direction:column;gap:12px}
 .faq{border:1px solid var(--hairline);border-radius:var(--r-sm);background:var(--glass);overflow:hidden;
@@ -279,6 +297,7 @@ footer .disclaimer{color:var(--t3);font-size:12px;max-width:620px;margin:22px au
     <div class="nav-links">
       <a href="#features">Fonctionnalités</a>
       <a href="#pricing">Tarifs</a>
+      <a href="#tiktok">TikTok HQ</a>
       <a href="#faq">FAQ</a>
     </div>
     <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe" class="nav-cta">Télécharger</a>
@@ -425,6 +444,29 @@ footer .disclaimer{color:var(--t3);font-size:12px;max-width:620px;margin:22px au
       Télécharger Vault.exe
     </a>
     <p class="dl-note">Windows · gratuit pour les objets &amp; titres · le pseudo nécessite une licence</p>
+  </div>
+</section>
+
+<!-- TIKTOK HQ PATCH -->
+<section class="sec wrap" id="tiktok">
+  <p class="eyebrow reveal">Outil gratuit</p>
+  <h2 class="reveal">TikTok HQ Patch</h2>
+  <p class="lead reveal">Dépose ta vidéo, clique sur Patcher : l'outil injecte de faux samples dans les métadonnées du MP4 pour déclencher le pipeline d'encodage haute qualité de TikTok. Sans ré-encodage, sans perte, 100&nbsp;% dans ton navigateur — rien n'est envoyé en ligne.</p>
+  <div class="tk-card glass reveal">
+    <input type="file" id="tk-file" accept="video/mp4,video/quicktime,.mp4,.mov" hidden>
+    <div class="tk-drop" id="tk-drop" role="button" tabindex="0" aria-label="Choisir une vidéo à patcher">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+      <div>Glisse ta vidéo ici, ou clique pour la choisir</div>
+      <div class="hint">MP4 / MOV · aucune limite de taille · patch direct sans compression</div>
+    </div>
+    <div class="tk-fileinfo" id="tk-fileinfo" hidden>
+      <span class="lab" id="tk-name"></span><span class="val tnum" id="tk-size"></span>
+    </div>
+    <button class="btn btn-primary tk-btn" id="tk-patch" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      Patcher
+    </button>
+    <div class="tk-log tnum" id="tk-log" hidden></div>
   </div>
 </section>
 
@@ -653,6 +695,407 @@ footer .disclaimer{color:var(--t3);font-size:12px;max-width:620px;margin:22px au
       else { frame(); }
     }catch(err){ /* CDN blocked or WebGL unavailable: CSS ambient background stays */ }
   })();
+})();
+</script>
+
+<!-- TikTok HQ Patch — portage JS de tiktok_quality.py (méthode V2, patch direct sans compression).
+     Injecte 9x de faux samples dans les tables moov (stts/stsz/stsc/stco + durée mdhd)
+     pour déclencher le pipeline d'encodage HQ de TikTok. Le mdat n'est jamais chargé en RAM :
+     le fichier de sortie référence des tranches (slices) du fichier d'origine. -->
+<script>
+(function(){
+'use strict';
+var FAKE_SAMPLE = new Uint8Array([0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x00]);
+var FAKE_SIZE = 8, FAKE_MULT = 9, U32_MAX = 0xFFFFFFFF;
+var CONTAINERS = {moov:1, trak:1, mdia:1, minf:1, stbl:1};
+
+var input   = document.getElementById('tk-file');
+var drop    = document.getElementById('tk-drop');
+var infoRow = document.getElementById('tk-fileinfo');
+var nameEl  = document.getElementById('tk-name');
+var sizeEl  = document.getElementById('tk-size');
+var btn     = document.getElementById('tk-patch');
+var logBox  = document.getElementById('tk-log');
+if(!input || !drop || !btn || !logBox){ return; }
+
+var currentFile = null, lastUrl = null;
+
+function fmtMB(b){ return (b / 1048576).toFixed(1) + ' MB'; }
+function logLine(msg, cls){
+  var d = document.createElement('div');
+  if(cls){ d.className = cls; }
+  d.textContent = msg;
+  logBox.appendChild(d);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+/* ---------- helpers binaires ---------- */
+function str4(u8, o){ return String.fromCharCode(u8[o], u8[o+1], u8[o+2], u8[o+3]); }
+function concatU8(parts){
+  var len = 0, i, off = 0;
+  for(i = 0; i < parts.length; i++){ len += parts[i].length; }
+  var out = new Uint8Array(len);
+  for(i = 0; i < parts.length; i++){ out.set(parts[i], off); off += parts[i].length; }
+  return out;
+}
+function makeBox(type, payload){
+  var size = 8 + payload.length;
+  if(size > U32_MAX){ throw new Error('Box ' + type + ' dépasse 4 Go, non supporté ici.'); }
+  var out = new Uint8Array(size);
+  new DataView(out.buffer).setUint32(0, size);
+  for(var i = 0; i < 4; i++){ out[4+i] = type.charCodeAt(i); }
+  out.set(payload, 8);
+  return out;
+}
+
+/* ---------- parsing MP4 (ISO BMFF) ---------- */
+function parseBoxes(u8, dv, start, end){
+  var boxes = [], off = start;
+  while(off + 8 <= end){
+    var small = dv.getUint32(off);
+    var type = str4(u8, off + 4);
+    var size = small, header = 8;
+    if(small === 1){
+      if(off + 16 > end){ throw new Error('Box incomplète : ' + type); }
+      size = Number(dv.getBigUint64(off + 8)); header = 16;
+    } else if(small === 0){ size = end - off; }
+    if(size < header || off + size > end){
+      throw new Error('Taille invalide dans la box « ' + type + ' »');
+    }
+    var box = {type:type, offset:off, size:size, headerSize:header,
+               contentStart:off + header, end:off + size, children:[]};
+    if(CONTAINERS[type]){ box.children = parseBoxes(u8, dv, box.contentStart, box.end); }
+    boxes.push(box);
+    off += size;
+  }
+  return boxes;
+}
+function findChild(box, t){
+  for(var i = 0; i < box.children.length; i++){ if(box.children[i].type === t){ return box.children[i]; } }
+  return null;
+}
+function findDesc(box, path){
+  var cur = box;
+  for(var i = 0; i < path.length; i++){ cur = findChild(cur, path[i]); if(!cur){ return null; } }
+  return cur;
+}
+function handlerType(u8, trak){
+  var hdlr = findDesc(trak, ['mdia', 'hdlr']);
+  if(!hdlr || hdlr.contentStart + 12 > hdlr.end){ return null; }
+  return str4(u8, hdlr.contentStart + 8);
+}
+
+/* ---------- tables d'échantillons ---------- */
+function parseStsz(dv, stsz){
+  var p = stsz.contentStart;
+  var sampleSize = dv.getUint32(p + 4), count = dv.getUint32(p + 8);
+  var sizes = new Uint32Array(count);
+  if(sampleSize){ sizes.fill(sampleSize); return sizes; }
+  if(p + 12 + count * 4 > stsz.end){ throw new Error('stsz trop petite pour le nombre de samples déclaré.'); }
+  for(var i = 0; i < count; i++){ sizes[i] = dv.getUint32(p + 12 + i * 4); }
+  return sizes;
+}
+function parseStsc(dv, stsc){
+  var p = stsc.contentStart, count = dv.getUint32(p + 4);
+  if(p + 8 + count * 12 > stsc.end){ throw new Error('stsc trop petite.'); }
+  var rows = [];
+  for(var i = 0; i < count; i++){
+    var o = p + 8 + i * 12;
+    rows.push([dv.getUint32(o), dv.getUint32(o + 4), dv.getUint32(o + 8)]);
+  }
+  return rows;
+}
+function parseChunkOffsets(dv, box){
+  var p = box.contentStart, count = dv.getUint32(p + 4), out = [], i;
+  if(box.type === 'stco'){
+    if(p + 8 + count * 4 > box.end){ throw new Error('stco trop petite.'); }
+    for(i = 0; i < count; i++){ out.push(dv.getUint32(p + 8 + i * 4)); }
+  } else {
+    if(p + 8 + count * 8 > box.end){ throw new Error('co64 trop petite.'); }
+    for(i = 0; i < count; i++){ out.push(Number(dv.getBigUint64(p + 8 + i * 8))); }
+  }
+  return out;
+}
+function buildMdhd(u8, mdhd, duration){
+  var payload = u8.slice(mdhd.contentStart, mdhd.end);
+  var dv = new DataView(payload.buffer);
+  var version = payload[0];
+  if(version === 0){
+    if(duration > U32_MAX){
+      throw new Error('Durée patchée trop grande pour un mdhd v0 (vidéo trop longue pour le patch direct). '
+                      + 'Ré-encode d\'abord la vidéo (script Python, --mode hd).');
+    }
+    dv.setUint32(16, duration);
+  } else if(version === 1){
+    dv.setBigUint64(24, BigInt(duration));
+  } else {
+    throw new Error('Version mdhd non supportée : ' + version);
+  }
+  return makeBox('mdhd', payload);
+}
+function buildStts(realCount, fakeCount, delta){
+  var p = new Uint8Array(24), dv = new DataView(p.buffer);
+  dv.setUint32(4, 2);
+  dv.setUint32(8, realCount);  dv.setUint32(12, delta);
+  dv.setUint32(16, fakeCount); dv.setUint32(20, delta);
+  return makeBox('stts', p);
+}
+function buildStsz(sizes, fakeCount){
+  var total = sizes.length + fakeCount;
+  var p = new Uint8Array(12 + total * 4), dv = new DataView(p.buffer);
+  dv.setUint32(8, total);
+  var i;
+  for(i = 0; i < sizes.length; i++){ dv.setUint32(12 + i * 4, sizes[i]); }
+  for(i = 0; i < fakeCount; i++){ dv.setUint32(12 + (sizes.length + i) * 4, FAKE_SIZE); }
+  return makeBox('stsz', p);
+}
+function buildStsc(rows, chunkCount){
+  rows = rows.map(function(r){ return r.slice(); });
+  if(!rows.length || rows[rows.length - 1][1] !== 1){ rows.push([chunkCount + 1, 1, 1]); }
+  var p = new Uint8Array(8 + rows.length * 12), dv = new DataView(p.buffer);
+  dv.setUint32(4, rows.length);
+  for(var i = 0; i < rows.length; i++){
+    dv.setUint32(8 + i * 12, rows[i][0]);
+    dv.setUint32(12 + i * 12, rows[i][1]);
+    dv.setUint32(16 + i * 12, rows[i][2]);
+  }
+  return makeBox('stsc', p);
+}
+function buildChunkOffsetBox(offsets, delta, fakeOffset, fakeCount){
+  var out = new Array(offsets.length + (fakeOffset !== null ? fakeCount : 0));
+  var i, wide = false;
+  for(i = 0; i < offsets.length; i++){
+    out[i] = offsets[i] + delta;
+    if(out[i] > U32_MAX){ wide = true; }
+  }
+  if(fakeOffset !== null){
+    if(fakeOffset > U32_MAX){ wide = true; }
+    for(i = 0; i < fakeCount; i++){ out[offsets.length + i] = fakeOffset; }
+  }
+  var p, dv;
+  if(wide){
+    p = new Uint8Array(8 + out.length * 8); dv = new DataView(p.buffer);
+    dv.setUint32(4, out.length);
+    for(i = 0; i < out.length; i++){ dv.setBigUint64(8 + i * 8, BigInt(out[i])); }
+    return makeBox('co64', p);
+  }
+  p = new Uint8Array(8 + out.length * 4); dv = new DataView(p.buffer);
+  dv.setUint32(4, out.length);
+  for(i = 0; i < out.length; i++){ dv.setUint32(8 + i * 4, out[i]); }
+  return makeBox('stco', p);
+}
+function rebuildBox(u8, box, repl){
+  var found = repl.get(box);
+  if(found){ return found; }
+  if(!box.children.length){ return u8.subarray(box.offset, box.end); }
+  var parts = box.children.map(function(c){ return rebuildBox(u8, c, repl); });
+  return makeBox(box.type, concatU8(parts));
+}
+function collectOffsetBoxes(moov){
+  var out = [];
+  moov.children.forEach(function(trak){
+    if(trak.type !== 'trak'){ return; }
+    var stbl = findDesc(trak, ['mdia', 'minf', 'stbl']);
+    if(!stbl){ return; }
+    var b = findChild(stbl, 'stco') || findChild(stbl, 'co64');
+    if(b){ out.push(b); }
+  });
+  return out;
+}
+
+/* ---------- scan des boxes racine (streaming, 16 octets par box) ---------- */
+async function scanTop(f){
+  var boxes = [], off = 0, size = f.size;
+  while(off + 8 <= size){
+    var head = new Uint8Array(await f.slice(off, Math.min(off + 16, size)).arrayBuffer());
+    var hv = new DataView(head.buffer);
+    var small = hv.getUint32(0);
+    var type = str4(head, 4);
+    var bsize = small, h = 8;
+    if(small === 1){
+      if(head.length < 16){ throw new Error('Box incomplète : ' + type); }
+      bsize = Number(hv.getBigUint64(8)); h = 16;
+    } else if(small === 0){ bsize = size - off; }
+    if(bsize < h || off + bsize > size){
+      var names = {};
+      boxes.forEach(function(b){ names[b.type] = 1; });
+      if(names.ftyp && names.moov && names.mdat){
+        logLine('Attention : données parasites ignorées en fin de fichier.', 'dim');
+        break;
+      }
+      throw new Error('Taille invalide dans la box racine « ' + type + ' » — pas un MP4/MOV standard ?');
+    }
+    boxes.push({type:type, offset:off, size:bsize, header:h});
+    off += bsize;
+  }
+  return boxes;
+}
+
+/* ---------- patch V2 (mode off : direct, sans perte) ---------- */
+async function patchFile(f){
+  var top = await scanTop(f);
+  logLine('Boxes racine : ' + top.map(function(b){ return b.type; }).join(', '), 'dim');
+
+  function pick(name){
+    for(var i = 0; i < top.length; i++){ if(top[i].type === name){ return top[i]; } }
+    return null;
+  }
+  var ftyp = pick('ftyp'), moov = pick('moov'), mdat = pick('mdat');
+  if(!ftyp){ throw new Error('Box « ftyp » introuvable : ce n\'est pas un MP4 valide.'); }
+  if(!moov){ throw new Error('Box « moov » introuvable : métadonnées MP4 manquantes.'); }
+  if(!mdat){ throw new Error('Box « mdat » introuvable : aucune donnée média.'); }
+  if(top.filter(function(b){ return b.type === 'mdat'; }).length > 1){
+    throw new Error('Plusieurs box mdat : non supporté par le patch direct.');
+  }
+
+  var ftypBytes = new Uint8Array(await f.slice(ftyp.offset, ftyp.offset + ftyp.size).arrayBuffer());
+  var preservedParts = [], preservedLen = 0;
+  top.forEach(function(b){
+    if(b.type === 'ftyp' || b.type === 'moov' || b.type === 'mdat'){ return; }
+    preservedParts.push(f.slice(b.offset, b.offset + b.size));
+    preservedLen += b.size;
+  });
+
+  var moovU8 = new Uint8Array(await f.slice(moov.offset, moov.offset + moov.size).arrayBuffer());
+  var moovDv = new DataView(moovU8.buffer);
+  var moovBox = parseBoxes(moovU8, moovDv, 0, moovU8.length)[0];
+
+  var videoTrak = null;
+  for(var i = 0; i < moovBox.children.length; i++){
+    var c = moovBox.children[i];
+    if(c.type === 'trak' && handlerType(moovU8, c) === 'vide'){ videoTrak = c; break; }
+  }
+  if(!videoTrak){ throw new Error('Piste vidéo introuvable.'); }
+
+  var stbl = findDesc(videoTrak, ['mdia', 'minf', 'stbl']);
+  var mdhd = findDesc(videoTrak, ['mdia', 'mdhd']);
+  var stts = stbl && findChild(stbl, 'stts');
+  var stsc = stbl && findChild(stbl, 'stsc');
+  var stsz = stbl && findChild(stbl, 'stsz');
+  var videoCo = stbl && (findChild(stbl, 'stco') || findChild(stbl, 'co64'));
+  if(!stbl || !mdhd || !stts || !stsc || !stsz || !videoCo){
+    throw new Error('Boxes requises manquantes (mdhd/stts/stsc/stsz/stco).');
+  }
+
+  var sizes = parseStsz(moovDv, stsz);
+  var stscRows = parseStsc(moovDv, stsc);
+  var chunkOffsets = parseChunkOffsets(moovDv, videoCo);
+  var offsetBoxes = collectOffsetBoxes(moovBox);
+
+  var mv = mdhd.contentStart;
+  var timescale = moovU8[mv] === 0 ? moovDv.getUint32(mv + 12) : moovDv.getUint32(mv + 20);
+  var sp = stts.contentStart;
+  var sampleDelta = moovDv.getUint32(sp + 4) >= 1 ? moovDv.getUint32(sp + 12) : 1500;
+
+  var realCount = sizes.length;
+  var fakeCount = realCount * FAKE_MULT;
+  var newDuration = (realCount + fakeCount) * sampleDelta;
+
+  logLine('Samples réels : ' + realCount + '  |  faux : ' + fakeCount + ' (x' + FAKE_MULT + ')');
+  logLine('Timescale : ' + timescale + '  |  delta : ' + sampleDelta
+          + '  |  chunks vidéo : ' + chunkOffsets.length, 'dim');
+
+  var fixed = new Map();
+  fixed.set(mdhd, buildMdhd(moovU8, mdhd, newDuration));
+  fixed.set(stts, buildStts(realCount, fakeCount, sampleDelta));
+  fixed.set(stsc, buildStsc(stscRows, chunkOffsets.length));
+  fixed.set(stsz, buildStsz(sizes, fakeCount));
+
+  var oldMdatContent = mdat.offset + mdat.header;
+  var mdatPayload = mdat.size - mdat.header;
+  var newPayload = mdatPayload + FAKE_SAMPLE.length;
+  var mdatHeaderSize = (newPayload + 8 > U32_MAX) ? 16 : 8;
+
+  /* itère jusqu'à stabilisation des offsets (la taille de moov dépend de stco/co64) */
+  var delta = 0, fakeOffset = 0, moovBytes = null, stable = false;
+  for(var pass = 0; pass < 8; pass++){
+    var repl = new Map(fixed);
+    for(var k = 0; k < offsetBoxes.length; k++){
+      var ob = offsetBoxes[k];
+      repl.set(ob, buildChunkOffsetBox(parseChunkOffsets(moovDv, ob), delta,
+               ob === videoCo ? fakeOffset : null, fakeCount));
+    }
+    moovBytes = rebuildBox(moovU8, moovBox, repl);
+    var newMdatStart = ftypBytes.length + moovBytes.length + preservedLen + mdatHeaderSize;
+    var nd = newMdatStart - oldMdatContent;
+    var nf = newMdatStart + mdatPayload;
+    if(nd === delta && nf === fakeOffset){ stable = true; break; }
+    delta = nd; fakeOffset = nf;
+  }
+  if(!stable){ throw new Error('Les offsets ne se stabilisent pas (fichier atypique).'); }
+
+  var header, hv2;
+  if(mdatHeaderSize === 16){
+    header = new Uint8Array(16); hv2 = new DataView(header.buffer);
+    hv2.setUint32(0, 1);
+    hv2.setBigUint64(8, BigInt(newPayload + 16));
+  } else {
+    header = new Uint8Array(8); hv2 = new DataView(header.buffer);
+    hv2.setUint32(0, newPayload + 8);
+  }
+  header[4] = 0x6D; header[5] = 0x64; header[6] = 0x61; header[7] = 0x74; /* 'mdat' */
+
+  logLine('moov patché : ' + moovBytes.length + ' octets  |  delta mdat : '
+          + (delta >= 0 ? '+' : '') + delta, 'dim');
+
+  /* le mdat est référencé par slice : jamais chargé en mémoire */
+  var parts = [ftypBytes, moovBytes].concat(preservedParts);
+  parts.push(header, f.slice(oldMdatContent, oldMdatContent + mdatPayload), FAKE_SAMPLE);
+  return {blob: new Blob(parts, {type:'video/mp4'}), real: realCount, fake: fakeCount};
+}
+
+/* ---------- UI ---------- */
+function setFile(f){
+  if(!f){ return; }
+  currentFile = f;
+  nameEl.textContent = f.name;
+  sizeEl.textContent = fmtMB(f.size);
+  infoRow.hidden = false;
+  btn.disabled = false;
+  logBox.hidden = true;
+  logBox.innerHTML = '';
+}
+
+drop.addEventListener('click', function(){ input.click(); });
+drop.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); input.click(); }
+});
+drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', function(){ drop.classList.remove('over'); });
+drop.addEventListener('drop', function(e){
+  e.preventDefault();
+  drop.classList.remove('over');
+  if(e.dataTransfer.files.length){ setFile(e.dataTransfer.files[0]); }
+});
+input.addEventListener('change', function(){
+  if(input.files.length){ setFile(input.files[0]); }
+});
+
+btn.addEventListener('click', async function(){
+  if(!currentFile){ return; }
+  btn.disabled = true;
+  logBox.hidden = false;
+  logBox.innerHTML = '';
+  logLine('Patch de ' + currentFile.name + ' (' + fmtMB(currentFile.size) + ')…');
+  try{
+    var res = await patchFile(currentFile);
+    var stem = currentFile.name.replace(/\.[^.]+$/, '');
+    var outName = stem + '_hq.mp4';
+    if(lastUrl){ URL.revokeObjectURL(lastUrl); }
+    lastUrl = URL.createObjectURL(res.blob);
+    var a = document.createElement('a');
+    a.href = lastUrl;
+    a.download = outName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    logLine('Total déclaré : ' + (res.real + res.fake) + ' samples', 'dim');
+    logLine('Terminé : ' + outName + ' (' + fmtMB(res.blob.size) + ') — téléchargement lancé.', 'ok');
+  }catch(err){
+    logLine('Erreur : ' + (err && err.message ? err.message : err), 'err');
+  }
+  btn.disabled = false;
+});
 })();
 </script>
 </body>
