@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vault — Le compagnon tout-en-un de Rocket League</title>
-<meta name="description" content="Suivi de tes matchs en direct, overlays en jeu, tableau tactique, Discord Rich Presence et personnalisation locale (pseudo, rank, objets). Gratuit, sans installation.">
+<meta name="description" content="Stats en direct, overlays en jeu, coaching, Discord Rich Presence, et maintenant jouer à distance avec un LAN virtuel. Gratuit, sans installation, un seul .exe.">
 <meta property="og:title" content="Vault — Le compagnon tout-en-un de Rocket League">
-<meta property="og:description" content="Stats en direct, overlays en jeu, coaching, Discord Rich Presence et personnalisation locale. Gratuit.">
+<meta property="og:description" content="Stats en direct, overlays, coaching, Discord Rich Presence et jeu à distance en LAN virtuel. Gratuit.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#08090C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,22 +15,17 @@
 <style>
 :root{
   --bg:#08090C; --bg2:#0E0F14;
-  --glass:rgba(255,255,255,0.075); --glass-2:rgba(255,255,255,0.11);
-  --hairline:rgba(255,255,255,0.14); --hairline-strong:rgba(255,255,255,0.22);
+  --glass:rgba(255,255,255,.075); --glass-2:rgba(255,255,255,.11);
+  --hairline:rgba(255,255,255,.14); --hairline-strong:rgba(255,255,255,.22);
   --blur:18px;
-  --t1:rgba(255,255,255,0.95); --t2:rgba(255,255,255,0.62); --t3:rgba(255,255,255,0.52);
-  /* Le chrome reste monochrome : la couleur est réservée à la donnée (rank,
-     score, équipes). C'est ce qui fait lire l'interface comme du verre plutôt
-     que comme un thème bleu. */
-  --chrome:rgba(255,255,255,0.92);
-  --accent:#0A84FF; --accent-2:#4AA5FF; --accent-soft:rgba(10,132,255,0.16); --gold:#FFC24B;
-  --orange:#FF7A18; --orange-2:#FFB067;
-  --green:#34C759;
-  --font:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Inter,sans-serif;
-  --display:"Space Grotesk",-apple-system,"SF Pro Display",system-ui,sans-serif;
-  --r:24px; --r-sm:16px; --ease:cubic-bezier(.32,.72,0,1);
-  --maxw:1160px;
-  --glass-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 24px 60px -24px rgba(0,0,0,.7);
+  --t1:rgba(255,255,255,.95); --t2:rgba(255,255,255,.62); --t3:rgba(255,255,255,.5);
+  --chrome:rgba(255,255,255,.92);
+  --accent:#0A84FF; --accent-2:#4AA5FF; --accent-soft:rgba(10,132,255,.16);
+  --gold:#FFC24B; --green:#34C759; --pink:#FF7AB0;
+  --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Inter,sans-serif;
+  --display:"Space Grotesk",-apple-system,system-ui,sans-serif;
+  --r:24px; --r-sm:16px; --ease:cubic-bezier(.32,.72,0,1); --maxw:1160px;
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 24px 60px -24px rgba(0,0,0,.7);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -38,456 +33,388 @@ body{
   font-family:var(--font);color:var(--t1);line-height:1.6;overflow-x:hidden;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   background:
-    radial-gradient(1200px 800px at 50% -10%, #12131b 0%, transparent 60%),
+    radial-gradient(1200px 820px at 50% -12%, #14161f 0%, transparent 62%),
+    radial-gradient(900px 600px at 88% 8%, rgba(10,132,255,.10) 0%, transparent 60%),
     linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
-  background-attachment:fixed;
-  min-height:100vh;
+  background-attachment:fixed; min-height:100vh;
 }
 ::selection{background:rgba(10,132,255,.35);color:#fff}
 a{color:inherit;text-decoration:none}
 svg{display:block}
 :focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;border-radius:8px}
 .tnum{font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:2}
+section{position:relative;z-index:2}
 
-/* ambient background */
-
-/* three.js hero canvas */
-#scene{position:fixed;inset:0;z-index:0;pointer-events:none;display:block;opacity:.62}
-
-/* subtle vision grid */
+/* grille d'ambiance */
 .grid-fx{position:fixed;inset:0;z-index:1;pointer-events:none;
   background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
   background-size:54px 54px;
   -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 25%,transparent 72%);
   mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 25%,transparent 72%)}
 
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:2}
-section{position:relative;z-index:2}
-
 /* nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:60}
 .nav-inner{max-width:var(--maxw);margin:14px auto;padding:11px 16px 11px 20px;display:flex;align-items:center;justify-content:space-between;
-  border:1px solid transparent;border-radius:20px;transition:background .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease),backdrop-filter .4s var(--ease)}
-nav.scrolled .nav-inner{
-  background:var(--glass);border-color:var(--hairline);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
-  box-shadow:var(--glass-shadow)}
+  border:1px solid transparent;border-radius:20px;transition:background .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease)}
+nav.scrolled .nav-inner{background:var(--glass);border-color:var(--hairline);
+  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
 .logo{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.02em}
 .logo-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
-  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
-  border:1px solid var(--hairline-strong);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 18px -6px rgba(10,132,255,.5);
-  transition:transform .45s var(--ease);transform-style:preserve-3d}
-.logo:hover .logo-mark{transform:perspective(500px) rotateY(22deg) rotateX(-8deg) translateZ(10px)}
-.logo-mark svg{width:19px;height:19px;color:var(--accent-2)}
-.nav-links{display:flex;gap:32px;align-items:center;font-size:14px;font-weight:500}
+  background:linear-gradient(160deg,var(--accent),color-mix(in srgb,var(--accent) 40%,#000));
+  border:1px solid var(--hairline-strong);color:#fff;font-family:var(--display);font-weight:700;font-size:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 6px 18px -6px rgba(10,132,255,.6)}
+.logo b{font-weight:600}
+.logo .dot{color:var(--accent-2)}
+.nav-links{display:flex;gap:30px;align-items:center;font-size:14px;font-weight:500}
 .nav-links a{color:var(--t2);transition:color .2s}
 .nav-links a:hover{color:var(--t1)}
-.nav-cta{font-weight:600;font-size:14px;padding:9px 18px;border-radius:12px;color:#0A0A0D;
-  background:var(--chrome);box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 8px 24px -8px rgba(255,255,255,.35);
-  transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
-.nav-cta:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff, 0 14px 34px -8px rgba(255,255,255,.5)}
+.nav-cta{font-weight:600;font-size:14px;padding:9px 18px;border-radius:12px;color:#0A0A0D;background:var(--chrome);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 8px 24px -8px rgba(255,255,255,.35);transition:transform .25s var(--ease)}
+.nav-cta:hover{transform:translateY(-2px)}
+.nav-burger{display:none;background:none;border:0;cursor:pointer;color:var(--t1);padding:6px}
+.nav-burger svg{width:24px;height:24px}
+@media(max-width:820px){
+  .nav-links{position:fixed;inset:70px 14px auto 14px;flex-direction:column;gap:6px;align-items:stretch;padding:14px;
+    background:var(--bg2);border:1px solid var(--hairline);border-radius:18px;box-shadow:var(--glass-shadow);
+    transform:translateY(-12px);opacity:0;pointer-events:none;transition:.25s var(--ease)}
+  .nav-links.open{transform:none;opacity:1;pointer-events:auto}
+  .nav-links a{padding:10px 12px;border-radius:10px}
+  .nav-links a:hover{background:var(--glass)}
+  .nav-burger{display:block}
+}
 
-/* buttons */
+/* boutons */
 .btn{font-family:var(--font);font-weight:600;border:0;cursor:pointer;border-radius:14px;display:inline-flex;align-items:center;gap:10px;
-  transition:transform .3s var(--ease),box-shadow .3s var(--ease),background .3s;font-size:16px;padding:15px 26px;position:relative}
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease);font-size:16px;padding:15px 26px}
 .btn svg{width:19px;height:19px}
-.btn-primary{background:var(--chrome);color:#0A0A0D;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 14px 44px -14px rgba(255,255,255,.4)}
+.btn-primary{background:var(--chrome);color:#0A0A0D;box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 14px 44px -14px rgba(255,255,255,.4)}
 .btn-primary:hover{transform:translateY(-3px);box-shadow:inset 0 1px 0 #fff, 0 22px 60px -16px rgba(255,255,255,.55)}
 .btn-ghost{background:var(--glass);color:var(--t1);border:1px solid var(--hairline);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
-  box-shadow:var(--glass-shadow)}
+  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
 .btn-ghost:hover{transform:translateY(-3px);border-color:var(--hairline-strong);background:var(--glass-2)}
 
 /* hero */
-.hero{padding:180px 0 70px;text-align:center}
-.badge{display:inline-flex;align-items:center;gap:9px;font-size:13px;letter-spacing:.01em;
-  padding:8px 16px;border-radius:30px;border:1px solid var(--hairline);background:var(--glass);color:var(--t2);margin-bottom:30px;
+.hero{padding:172px 0 60px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:9px;font-size:13px;padding:8px 16px;border-radius:30px;
+  border:1px solid var(--hairline);background:var(--glass);color:var(--t2);margin-bottom:28px;
   backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
 .badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);animation:pulse 1.9s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.32}}
-.hero h1{overflow-wrap:break-word;font-family:var(--display);font-weight:600;font-size:clamp(28px,7.8vw,78px);line-height:1.02;letter-spacing:-.035em;margin-bottom:24px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,7.6vw,76px);line-height:1.02;letter-spacing:-.035em;margin-bottom:22px;overflow-wrap:break-word}
 .hero h1 .g{color:#fff;text-shadow:0 0 46px rgba(255,255,255,.35)}
-.hero p.sub{font-size:clamp(15px,2vw,20px);color:var(--t2);max-width:660px;margin:0 auto 38px;font-weight:400}
-.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
-.hero-meta{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--t3)}
+.hero h1 .b{background:linear-gradient(120deg,var(--accent-2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{font-size:clamp(15px,2vw,20px);color:var(--t2);max-width:660px;margin:0 auto 36px;font-weight:400}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+.hero-meta{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--t3)}
 .hero-meta span{display:inline-flex;align-items:center;gap:7px}
 .hero-meta svg{width:15px;height:15px;color:var(--accent-2)}
 
-/* app preview */
-.preview{margin-top:72px}
-.preview-card{max-width:780px;margin:0 auto;border-radius:var(--r);border:1px solid var(--hairline);
-  background:var(--glass);backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
-  box-shadow:var(--glass-shadow), 0 60px 120px -40px rgba(0,0,0,.75);overflow:hidden;transform-style:preserve-3d}
-.win-bar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--hairline);background:rgba(0,0,0,.2)}
-.win-dot{width:11px;height:11px;border-radius:50%}
-.win-title{margin-left:14px;font-size:12.5px;color:var(--t2);letter-spacing:.01em}
-.app-body{padding:22px 24px 26px;display:flex;flex-direction:column;gap:12px;transform:translateZ(30px)}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.tab{font-size:12.5px;padding:7px 14px;border-radius:11px;border:1px solid var(--hairline);color:var(--t2);background:rgba(255,255,255,.03)}
-.tab.on{color:#0A0A0D;background:var(--chrome);border-color:transparent;font-weight:600;box-shadow:inset 0 1px 0 #fff}
-.app-row{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--glass);border:1px solid var(--hairline);border-radius:14px;padding:14px 18px}
-.app-row .lab{font-size:13.5px;color:var(--t2)}
-.app-row .val{font-size:13.5px;color:var(--accent-2);display:inline-flex;align-items:center;gap:8px}
-.chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.chip{font-size:11.5px;padding:4px 10px;border-radius:20px;background:var(--accent-soft);color:var(--accent-2);border:1px solid rgba(74,165,255,.3)}
-.status{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--green);padding:2px}
-.status .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.9s infinite}
+/* carte apercu (lobby mock) */
+.preview{margin-top:66px;max-width:820px;margin-left:auto;margin-right:auto}
+.preview-card{border-radius:var(--r);border:1px solid var(--hairline);background:var(--glass);
+  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
+  box-shadow:var(--glass-shadow);overflow:hidden}
+.preview-top{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--hairline)}
+.preview-top .d{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.2)}
+.preview-top .tt{margin-left:8px;font-size:12.5px;color:var(--t3);font-weight:500}
+.preview-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.preview-body{grid-template-columns:1fr}}
+.pl{display:flex;align-items:center;gap:11px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--hairline)}
+.pl.me{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.pl-av{width:36px;height:36px;flex:0 0 36px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,#000))}
+.pl-av.g2{background:linear-gradient(135deg,#8b5cf6,#5b21b6)}
+.pl-av.g3{background:linear-gradient(135deg,var(--green),#1f8f42)}
+.pl-main{min-width:0}
+.pl-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
+.pl-ip{font-size:11px;color:var(--t3);margin-top:2px}
+.pl-badge{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:var(--accent);color:#fff}
+.pl-badge.me{background:rgba(255,255,255,.08);color:var(--t2);border:1px solid var(--hairline)}
+.pl-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 22%,transparent)}
 
-/* section heading */
-.sec{padding:96px 0}
-.eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:14px;text-align:center;font-weight:600}
-.sec h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,5.4vw,50px);letter-spacing:-.03em;text-align:center;line-height:1.08;margin-bottom:16px}
-.sec .lead{text-align:center;color:var(--t2);max-width:610px;margin:0 auto 58px;font-size:17px}
+/* sections generiques */
+.sec{padding:92px 0}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);margin-bottom:14px}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,44px);letter-spacing:-.03em;line-height:1.08;margin-bottom:16px}
+.lead{font-size:clamp(15px,1.7vw,18px);color:var(--t2);max-width:640px;margin-bottom:40px}
 
-/* glass panel base
-   Un panneau de verre n'est pas un fond translucide : c'est une épaisseur. Le
-   ::after dessine le liseré réfractif — clair en haut où la lumière entre,
-   sombre en bas — masqué pour ne rester que sur le bord. Sans lui le verre
-   paraît peint ; avec lui il paraît taillé. */
-.glass{border:1px solid var(--hairline);background:var(--glass);position:relative;
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  padding:1.5px;
-  background:linear-gradient(150deg,
-    rgba(255,255,255,.55) 0%,
-    rgba(255,255,255,.06) 26%,
-    rgba(255,255,255,0) 52%,
-    rgba(255,255,255,.10) 78%,
-    rgba(255,255,255,.34) 100%);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  mask-composite:exclude;opacity:.9}
+/* feature phare LAN */
+.spot{border:1px solid var(--hairline);border-radius:var(--r);overflow:hidden;
+  background:linear-gradient(160deg,rgba(10,132,255,.12),rgba(255,255,255,.03));box-shadow:var(--glass-shadow)}
+.spot-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:0}
+@media(max-width:860px){.spot-grid{grid-template-columns:1fr}}
+.spot-l{padding:44px 40px}
+.spot-l .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-2);
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:999px;padding:4px 11px;margin-bottom:18px}
+.spot-l h3{font-family:var(--display);font-weight:600;font-size:clamp(22px,3vw,32px);letter-spacing:-.02em;margin-bottom:14px;line-height:1.12}
+.spot-l p{color:var(--t2);font-size:15.5px;margin-bottom:18px}
+.spot-steps{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:6px}
+.spot-steps li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--t1)}
+.spot-steps svg{width:20px;height:20px;flex:0 0 20px;color:var(--green);margin-top:1px}
+.spot-r{padding:34px;border-left:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(600px 300px at 70% 20%,rgba(10,132,255,.14),transparent 70%)}
+@media(max-width:860px){.spot-r{border-left:0;border-top:1px solid var(--hairline)}}
+.net{width:100%;max-width:340px}
+.net-card{border:1px solid var(--hairline);border-radius:14px;background:rgba(0,0,0,.28);padding:14px;margin-bottom:10px;
+  display:flex;align-items:center;gap:11px}
+.net-card:last-child{margin-bottom:0}
+.net-ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-2)}
+.net-ico svg{width:18px;height:18px}
+.net-tx b{display:block;font-size:13.5px}
+.net-tx span{font-size:11.5px;color:var(--t3)}
+.net-line{height:22px;margin:0 auto;width:2px;background:linear-gradient(var(--accent-2),transparent);opacity:.6}
 
-/* features */
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.feat{padding:30px;border-radius:var(--r);position:relative;overflow:hidden;transform-style:preserve-3d}
-.feat::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.10),transparent 60%);opacity:0;transition:opacity .35s;pointer-events:none}
-.feat:hover::before{opacity:1}
-.feat-ico{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;margin-bottom:18px;
-  background:rgba(255,255,255,.07);border:1px solid var(--hairline-strong);position:relative;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22);transition:transform .4s var(--ease)}
-.feat:hover .feat-ico{transform:translateZ(40px) translateY(-4px)}
-.feat-ico svg{width:25px;height:25px;color:var(--t1)}
-.feat h3{font-family:var(--display);font-weight:600;font-size:19px;margin-bottom:9px;position:relative;transform:translateZ(18px)}
-.feat p{color:var(--t2);font-size:14.5px;position:relative;transform:translateZ(10px)}
-.feat .free{position:absolute;top:22px;right:22px;font-size:10.5px;letter-spacing:.05em;font-weight:600;color:var(--green);background:rgba(52,199,89,.12);border:1px solid rgba(52,199,89,.32);padding:4px 9px;border-radius:20px;transform:translateZ(24px)}
+/* bento modules */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.bt{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:24px;background:var(--glass);
+  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
+  box-shadow:var(--glass-shadow);transition:transform .3s var(--ease),border-color .3s}
+.bt:hover{transform:translateY(-4px);border-color:var(--hairline-strong)}
+.bt.wide{grid-column:span 4}.bt.half{grid-column:span 3}.bt.third{grid-column:span 2}
+@media(max-width:900px){.bt.wide,.bt.half,.bt.third{grid-column:span 6}}
+.bt .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-2);margin-bottom:12px}
+.bt-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;
+  background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent-2)}
+.bt-ico svg{width:22px;height:22px}
+.bt h3{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.01em;margin-bottom:8px}
+.bt p{color:var(--t2);font-size:14px}
+.bt-demo{margin-top:16px;border-top:1px solid var(--hairline);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.bt-line{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px}
+.bt-line .k{color:var(--t3)}
+.bt-line .v{font-weight:600}
+.bt-line .tb{color:var(--accent-2)}.bt-line .to{color:var(--gold)}
 
-/* steps */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.step{position:relative;padding:34px 28px;border-radius:var(--r);transform-style:preserve-3d}
-.step .num{font-family:var(--display);font-weight:600;font-size:16px;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
-  background:var(--chrome);color:#0A0A0D;margin-bottom:20px;box-shadow:inset 0 1px 0 #fff, 0 10px 28px -10px rgba(255,255,255,.4);transform:translateZ(30px)}
-.step h3{font-family:var(--display);font-weight:600;font-size:19px;margin-bottom:8px;transform:translateZ(16px)}
-.step p{color:var(--t2);font-size:14.5px;transform:translateZ(8px)}
+/* grille perso */
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.feat-grid{grid-template-columns:1fr}}
+.feat{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:20px;background:var(--glass);
+  box-shadow:var(--glass-shadow);transition:transform .3s var(--ease),border-color .3s}
+.feat:hover{transform:translateY(-3px);border-color:var(--hairline-strong)}
+.feat-ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;margin-bottom:13px;background:rgba(255,255,255,.06);border:1px solid var(--hairline);color:var(--t1)}
+.feat-ico svg{width:19px;height:19px}
+.feat h3{font-weight:600;font-size:15.5px;margin-bottom:6px}
+.feat p{color:var(--t2);font-size:13px}
 
-/* pricing */
-
-/* download cta */
-.dl-card{max-width:780px;margin:0 auto;text-align:center;padding:60px 40px;border-radius:var(--r);
-  position:relative;overflow:hidden;border:1px solid var(--hairline);background:var(--glass);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.dl-card::after{content:"";position:absolute;width:460px;height:460px;border-radius:50%;background:#2E9BFF;filter:blur(130px);opacity:.20;top:-210px;left:50%;transform:translateX(-50%);pointer-events:none}
-.dl-card h2{font-family:var(--display);font-weight:600;font-size:clamp(23px,5vw,42px);letter-spacing:-.03em;position:relative}
-.dl-card p{color:var(--t2);max-width:460px;margin:14px auto 0;position:relative}
-.dl-card .btn{position:relative}
-.dl-note{font-size:13px;color:var(--t3);margin-top:20px;position:relative}
-
-/* tiktok hq patcher */
-[hidden]{display:none!important}
-.tk-card{max-width:640px;margin:0 auto;border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:14px}
-.tk-drop{border:1.5px dashed var(--hairline-strong);border-radius:var(--r-sm);padding:40px 24px;text-align:center;cursor:pointer;color:var(--t2);font-size:15px;
-  transition:border-color .25s,background .25s,color .25s}
-.tk-drop:hover,.tk-drop.over{border-color:var(--hairline-strong);background:rgba(255,255,255,.05);color:var(--t1)}
-.tk-drop svg{width:36px;height:36px;margin:0 auto 12px;color:var(--t2)}
-.tk-drop .hint{font-size:12.5px;color:var(--t3);margin-top:7px}
-.tk-fileinfo{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--glass);border:1px solid var(--hairline);border-radius:14px;padding:14px 18px}
-.tk-fileinfo .lab{font-size:13.5px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tk-fileinfo .val{font-size:13.5px;color:var(--accent-2);flex-shrink:0}
-.tk-btn{width:100%;justify-content:center}
-.btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
-.tk-log{background:rgba(0,0,0,.28);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:14px 18px;font-size:12.5px;line-height:1.8;max-height:240px;overflow:auto;color:var(--t2);word-break:break-word}
-.tk-log .ok{color:var(--green)}
-.tk-log .err{color:#FF5F57}
-.tk-log .dim{color:var(--t3)}
+/* etapes */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:760px){.steps{grid-template-columns:1fr}}
+.step{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:26px;background:var(--glass);box-shadow:var(--glass-shadow)}
+.step .num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-weight:700;
+  background:var(--accent-soft);color:var(--accent-2);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);margin-bottom:16px}
+.step h3{font-family:var(--display);font-weight:600;font-size:18px;margin-bottom:8px}
+.step p{color:var(--t2);font-size:14px}
 
 /* faq */
-.faq-list{max-width:760px;margin:40px auto 0;display:flex;flex-direction:column;gap:12px}
-.faq{border:1px solid var(--hairline);border-radius:var(--r-sm);background:var(--glass);overflow:hidden;
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.faq button{width:100%;text-align:left;background:none;border:0;color:var(--t1);font-family:var(--font);font-weight:600;font-size:16.5px;padding:20px 22px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
-.faq button svg{width:20px;height:20px;color:var(--t2);transition:transform .35s var(--ease);flex-shrink:0}
-.faq.open button svg{transform:rotate(45deg)}
-.faq .ans{max-height:0;overflow:hidden;transition:max-height .4s var(--ease)}
-.faq .ans p{padding:0 22px 22px;color:var(--t2);font-size:15px}
+.faq{display:flex;flex-direction:column;gap:10px;max-width:820px}
+.qa{border:1px solid var(--hairline);border-radius:14px;background:var(--glass);overflow:hidden}
+.qa summary{list-style:none;cursor:pointer;padding:18px 20px;font-weight:600;font-size:15.5px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary .pm{color:var(--accent-2);font-size:22px;transition:transform .25s var(--ease);flex:0 0 auto}
+.qa[open] summary .pm{transform:rotate(45deg)}
+.qa .a{padding:0 20px 18px;color:var(--t2);font-size:14.5px}
+
+/* cta download */
+.dl{border:1px solid var(--hairline);border-radius:var(--r);padding:56px 40px;text-align:center;
+  background:linear-gradient(160deg,rgba(10,132,255,.14),rgba(255,255,255,.03));box-shadow:var(--glass-shadow)}
+.dl h2{margin-bottom:14px}
+.dl p{color:var(--t2);max-width:520px;margin:0 auto 30px}
+.dl .hero-meta{margin-top:24px}
 
 /* footer */
-footer{padding:64px 0 54px;border-top:1px solid var(--hairline);margin-top:44px;text-align:center;position:relative;z-index:2}
-.foot-logo{justify-content:center;margin-bottom:18px}
-footer .made{color:var(--t3);font-size:14px}
-footer .made .h{color:#FF5C8A}
-footer .disclaimer{color:var(--t3);font-size:12px;max-width:620px;margin:22px auto 0;line-height:1.7}
+footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.foot .logo{font-size:17px}
+.foot-links{display:flex;gap:24px;font-size:14px;color:var(--t2);flex-wrap:wrap}
+.foot-links a:hover{color:var(--t1)}
+.foot-note{margin-top:20px;font-size:12.5px;color:var(--t3)}
 
-/* reveal (3D) */
-.reveal{opacity:0;transform:perspective(1100px) rotateX(11deg) translateY(42px) translateZ(-40px);
-  transition:opacity .8s var(--ease),transform .9s var(--ease)}
-.reveal.in{opacity:1;transform:perspective(1100px) rotateX(0) translateY(0) translateZ(0)}
-.feat-grid .reveal:nth-child(2){transition-delay:.06s}
-.feat-grid .reveal:nth-child(3){transition-delay:.12s}
-.feat-grid .reveal:nth-child(4){transition-delay:.06s}
-.feat-grid .reveal:nth-child(5){transition-delay:.12s}
-.feat-grid .reveal:nth-child(6){transition-delay:.18s}
-.steps .reveal:nth-child(2){transition-delay:.09s}
-.steps .reveal:nth-child(3){transition-delay:.18s}
-
-/* tilt base */
-.tilt{transition:transform .5s var(--ease)}
-
-/* ---- bento des modules (motif Bento Grid Showcase) ----
-   Densite d'information forte sans encombrement : une tuile large qui porte le
-   module principal, des tuiles simples pour le reste. */
-.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
-.bt{padding:28px;border-radius:var(--r);position:relative;overflow:hidden;transform-style:preserve-3d;
-  display:flex;flex-direction:column;gap:12px;min-height:210px}
-.bt.wide{grid-column:span 4}
-.bt.half{grid-column:span 3}
-.bt.third{grid-column:span 2}
-.bt::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.10),transparent 60%)}
-.bt:hover::before{opacity:1}
-.bt-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;
-  background:rgba(255,255,255,.07);border:1px solid var(--hairline-strong);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
-.bt-ico svg{width:21px;height:21px;color:var(--t1)}
-.bt h3{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.01em}
-.bt p{color:var(--t2);font-size:14.5px;flex:1}
-.bt .tag{position:absolute;top:24px;right:24px;font-size:10.5px;letter-spacing:.05em;font-weight:600;
-  color:var(--t1);background:rgba(255,255,255,.09);border:1px solid var(--hairline-strong);padding:4px 9px;border-radius:20px}
-
-/* mini-demo de scoreboard dans la tuile large */
-.bt-demo{display:flex;flex-direction:column;gap:8px;margin-top:2px}
-.bt-line{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;
-  background:rgba(0,0,0,.24);border:1px solid var(--hairline);border-radius:12px;padding:10px 14px}
-.bt-line .k{color:var(--t2)}
-.bt-line .v{color:var(--t1)}
-/* Couleur = donnee. Les equipes sont le seul endroit ou elle porte du sens.
-   Selecteurs descendants obligatoires : .app-row .val et .bt-line .v pesent
-   deux classes et ecraseraient un .tb seul. */
-.val .tb,.v .tb{color:var(--accent-2)}
-.val .to,.v .to{color:var(--orange-2)}
-.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.10);overflow:hidden;flex:1;max-width:130px}
-.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
-
-/* ---- bloc gratuit (remplace la grille tarifaire) ---- */
-.free-card{max-width:820px;margin:0 auto;text-align:center;padding:52px 40px;border-radius:var(--r);position:relative;overflow:hidden}
-.free-card .big{font-family:var(--display);font-weight:700;font-size:clamp(34px,8.5vw,72px);line-height:1;letter-spacing:-.035em;margin:6px 0 10px}
-.free-card .sub2{color:var(--t2);max-width:520px;margin:0 auto}
-.free-list{list-style:none;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:28px 0 30px}
-.free-list li{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--t1);
-  background:rgba(255,255,255,.06);border:1px solid var(--hairline);border-radius:30px;padding:9px 16px}
-.free-list svg{width:16px;height:16px;color:var(--t1);flex-shrink:0}
-
-@media(max-width:1000px){
-  .bt.wide,.bt.half,.bt.third{grid-column:span 6}
-  .bento{grid-template-columns:1fr}
-}
-
-/* responsive */
-@media(max-width:860px){
-  /* 14.5px passe mal sur telephone : on remonte le corps a 16px la ou il est lu. */
-  .feat p,.step p{font-size:16px}
-  .sec .lead{font-size:16.5px}
-  .nav-links{display:none}
-  .feat-grid,.steps{grid-template-columns:1fr}
-  .sec{padding:70px 0}
-  .hero{padding:150px 0 50px}
-  /* Le relief 3D des cartes ne survit pas au tactile : on l'aplatit. */
-  .feat h3,.feat p,.feat-ico,.app-body,.step .num,.step h3,.step p,
-  .bt h3,.bt p,.bt-ico{transform:none}
-  #scene{opacity:.7}
-}
-@media(prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
-  .reveal{opacity:1;transform:none}
-  .tilt{transform:none!important}
-  .bt::before,.feat::before{display:none}
-}
+/* reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.badge .pulse{animation:none}}
 </style>
 </head>
-<body>
-<!-- Monogramme V de la marque, defini une fois et reutilise via <use>.
-     Seul element du chrome autorise a porter les couleurs d'equipe. -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <linearGradient id="vault-v-grad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#5AB3FF"/><stop offset="48%" stop-color="#2E9BFF"/>
-      <stop offset="52%" stop-color="#FF9A3C"/><stop offset="100%" stop-color="#F26A0A"/>
-    </linearGradient>
-    <symbol id="vault-v" viewBox="0 0 24 24">
-      <path d="M7.03 7.03h3l1.97 6.85 1.97-6.85h3l-3.56 11.63h-2.82z" fill="url(#vault-v-grad)"/>
-    </symbol>
-  </defs>
-</svg>
-<canvas id="scene"></canvas>
+<body id="top">
 <div class="grid-fx"></div>
 
-<!-- NAV -->
 <nav id="nav">
   <div class="nav-inner">
-    <a href="#top" class="logo" aria-label="Vault, accueil">
-      <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vault-v"/></svg></span>
-      Vault
-    </a>
-    <div class="nav-links">
+    <a href="#top" class="logo"><span class="logo-mark">V</span><b>Vault<span class="dot">.</span></b></a>
+    <div class="nav-links" id="navlinks">
+      <a href="#lan">Jouer à distance</a>
       <a href="#modules">Modules</a>
-      <a href="#features">Fonctionnalités</a>
-      <a href="#tiktok">TikTok HQ</a>
+      <a href="#features">Personnalisation</a>
+      <a href="#how">Comment ça marche</a>
       <a href="#faq">FAQ</a>
+      <a class="nav-cta" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">Télécharger</a>
     </div>
-    <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe" class="nav-cta">Télécharger — gratuit</a>
+    <button class="nav-burger" id="burger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="hero wrap" id="top">
-  <div class="badge reveal"><span class="pulse"></span>Vault 2.0 · désormais gratuit</div>
-  <h1 class="reveal">Tout ton Rocket League,<br>dans une seule <span class="g">app</span>.</h1>
-  <p class="sub reveal">Suivi de tes matchs en direct, overlays en jeu, tableau tactique, Discord Rich Presence — et toute la personnalisation locale : pseudo, rank, objets et titres. <b>Sans installation, sans compte, gratuit.</b></p>
+<header class="hero wrap">
+  <span class="badge reveal"><span class="pulse"></span> Nouveau · Jouer à distance en LAN virtuel</span>
+  <h1 class="reveal">Tout ton Rocket League,<br><span class="b">dans une seule fenêtre.</span></h1>
+  <p class="sub reveal">Stats en direct, overlays en jeu, coaching, Discord Rich Presence, personnalisation locale — et maintenant des parties privées avec tes amis, même à l'autre bout du pays. Gratuit, un seul <b>.exe</b>, rien à installer.</p>
   <div class="hero-cta reveal">
-    <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe" class="btn btn-primary">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <a class="btn btn-primary" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
       Télécharger Vault
     </a>
-    <a href="#modules" class="btn btn-ghost">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      Découvrir les modules
+    <a class="btn btn-ghost" href="https://discord.gg/w6pkd4WzJa">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19 19 0 0 0 15.6 3l-.24.5a17.5 17.5 0 0 1 4.2 1.3 15.6 15.6 0 0 0-15.1 0A17.4 17.4 0 0 1 8.7 3.5L8.4 3a19 19 0 0 0-4.7 1.4C1 8.9.2 13.3.5 17.6a19.3 19.3 0 0 0 5.8 2.9l.5-1.1a12.6 12.6 0 0 1-2-1l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12.6 12.6 0 0 1-2 1l.5 1.1a19.2 19.2 0 0 0 5.8-2.9c.4-5-.9-9.4-3.9-13.2ZM8.4 15c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9Zm7.2 0c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9Z"/></svg>
+      Rejoindre le Discord
     </a>
   </div>
   <div class="hero-meta reveal">
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>100 % local</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Gratuit</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Steam &amp; Epic</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 100 % gratuit</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Sans installation</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg> Windows</span>
   </div>
 
-  <!-- app preview -->
+  <!-- apercu lobby -->
   <div class="preview reveal">
-    <div class="preview-card tilt">
-      <div class="win-bar">
-        <span class="win-dot" style="background:#FF5F57"></span>
-        <span class="win-dot" style="background:#FEBC2E"></span>
-        <span class="win-dot" style="background:#28C840"></span>
-        <span class="win-title">Vault — 2.0</span>
+    <div class="preview-card">
+      <div class="preview-top">
+        <span class="d"></span><span class="d"></span><span class="d"></span>
+        <span class="tt">Vault — Remote Play · Lobby</span>
       </div>
-      <div class="app-body">
-        <div class="tabs">
-          <span class="tab on">Dashboard</span>
-          <span class="tab">Overlays</span>
-          <span class="tab">Coaching</span>
-          <span class="tab">Objets</span>
-          <span class="tab">Rank</span>
+      <div class="preview-body">
+        <div class="pl me">
+          <div class="pl-av">T</div>
+          <div class="pl-main"><div class="pl-name">Toi <span class="pl-badge">Hôte</span></div><div class="pl-ip">10.71.0.1</div></div>
+          <span class="pl-dot"></span>
         </div>
-        <div class="app-row"><span class="lab">Match en cours</span><span class="val tnum"><b class="tb">3</b> — <b class="to">1</b> · Champions Field</span></div>
-        <div class="app-row"><span class="lab">Session</span><span class="val tnum">7 V — 2 D · 14 buts · 9 arrêts</span></div>
-        <div class="app-row"><span class="lab">Overlays actifs</span><span class="chips"><span class="chip">Rank</span><span class="chip">Boost</span><span class="chip">Scoreboard</span></span></div>
-        <div class="status"><span class="dot"></span>Connecté — Discord Rich Presence actif</div>
+        <div class="pl">
+          <div class="pl-av g2">M</div>
+          <div class="pl-main"><div class="pl-name">Mxsquee</div><div class="pl-ip">10.71.0.148</div></div>
+          <span class="pl-dot"></span>
+        </div>
+        <div class="pl">
+          <div class="pl-av g3">E</div>
+          <div class="pl-main"><div class="pl-name">Esquie</div><div class="pl-ip">10.71.0.72</div></div>
+          <span class="pl-dot"></span>
+        </div>
+        <div class="pl">
+          <div class="pl-av" style="background:linear-gradient(135deg,var(--gold),#b8860b)">R</div>
+          <div class="pl-main"><div class="pl-name">Rainbow Road 64 <span class="pl-badge me">carte</span></div><div class="pl-ip">partagée · 7 Mo</div></div>
+          <span class="pl-dot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- LAN -->
+<section class="sec wrap" id="lan">
+  <p class="eyebrow reveal">La nouveauté</p>
+  <h2 class="reveal">Joue avec tes amis, où qu'ils soient</h2>
+  <p class="lead reveal">Pas besoin d'être sur le même réseau. Vault reproduit un vrai LAN, en perçant les connexions tout seul.</p>
+  <div class="spot reveal">
+    <div class="spot-grid">
+      <div class="spot-l">
+        <span class="tag">Remote Play · LAN virtuel</span>
+        <h3>Un vrai LAN, sans câble et sans logiciel tiers</h3>
+        <p>Vault monte une carte réseau virtuelle et traverse les NAT en pair-à-pair. Rocket League croit que vous êtes tous dans la même pièce : « Local Match » fonctionne comme un LAN classique, à n'importe quelle distance.</p>
+        <ul class="spot-steps">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Installation du réseau une seule fois — une autorisation Windows, puis plus jamais.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Un lobby qui se remplit tout seul : chaque joueur avec son adresse Vault.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Partage tes cartes Workshop en un clic — l'ami les reçoit et vous jouez dessus.</li>
+        </ul>
+      </div>
+      <div class="spot-r">
+        <div class="net">
+          <div class="net-card">
+            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <div class="net-tx"><b>Toi — Hôte</b><span>10.71.0.1</span></div>
+          </div>
+          <div class="net-line"></div>
+          <div class="net-card">
+            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg></div>
+            <div class="net-tx"><b>Perçage NAT + relais</b><span>pair-à-pair chiffré</span></div>
+          </div>
+          <div class="net-line"></div>
+          <div class="net-card">
+            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M16 3.1a4 4 0 0 1 0 7.8M21 21a6 6 0 0 0-4-5.6"/></svg></div>
+            <div class="net-tx"><b>Tes amis</b><span>même partie, à distance</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- MODULES 2.0 -->
+<!-- MODULES -->
 <section class="sec wrap" id="modules">
-  <p class="eyebrow reveal">Nouveau dans la 2.0</p>
-  <h2 class="reveal">Six modules, une seule fenêtre</h2>
-  <p class="lead reveal">Vault ne se contente plus de personnaliser ton jeu : il le suit, l'affiche et t'aide à progresser.</p>
+  <p class="eyebrow reveal">Les modules</p>
+  <h2 class="reveal">Sept modules, une seule fenêtre</h2>
+  <p class="lead reveal">Vault ne se contente pas de personnaliser ton jeu : il le suit, l'affiche, t'aide à progresser — et te connecte à tes amis.</p>
   <div class="bento">
-
-    <div class="bt glass tilt reveal wide">
-      <span class="tag">EN DIRECT</span>
+    <div class="bt wide reveal">
+      <span class="tag">En direct</span>
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
       <h3>Dashboard en direct</h3>
       <p>Score, buts, passes, arrêts, possession et probabilité de victoire, mis à jour pendant que tu joues. Ta session est compilée match après match, par mode.</p>
       <div class="bt-demo">
         <div class="bt-line"><span class="k">Match en cours</span><span class="v tnum"><b class="tb">3</b> — <b class="to">1</b></span></div>
-        <div class="bt-line"><span class="k">Chances de victoire</span><span class="v tnum">68 %</span><span class="bar"><i style="width:68%"></i></span></div>
+        <div class="bt-line"><span class="k">Chances de victoire</span><span class="v tnum">68 %</span></div>
       </div>
     </div>
-
-    <div class="bt glass tilt reveal third">
+    <div class="bt third reveal">
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="13" y="7" width="3" height="11"/></svg></div>
       <h3>Stats Tracker.gg</h3>
       <p>Ton profil et celui de tes adversaires, récupérés automatiquement sur Steam comme sur Epic.</p>
     </div>
-
-    <div class="bt glass tilt reveal half">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2.5"/><path d="M8 21h8M12 18v3"/><path d="M6 8h4"/></svg></div>
+    <div class="bt half reveal">
+      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2.5"/><path d="M8 21h8M12 18v3"/></svg></div>
       <h3>Overlays en jeu</h3>
-      <p>Rank, boost, scoreboard et tableau des scores affichés par-dessus Rocket League, positionnables au pixel près. Rien à alt-tabber.</p>
+      <p>Rank, boost, scoreboard, FPS et manette/clavier-souris affichés par-dessus Rocket League, positionnables au pixel près. Rien à alt-tabber.</p>
     </div>
-
-    <div class="bt glass tilt reveal half">
+    <div class="bt half reveal">
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="2.4"/></svg></div>
       <h3>Tableau tactique</h3>
       <p>Trace tes coups, tes rotations et tes kickoffs sur un terrain à l'échelle : courbes lissées, zoom, annulation. Pour coacher ou revoir une action.</p>
     </div>
-
-    <div class="bt glass tilt reveal wide">
-      <span class="tag">NOUVEAU</span>
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3h7l4.5 6-8 12-8-12 4.5-6Z"/><path d="M3.6 9h16.8"/></svg></div>
-      <h3>Discord Rich Presence</h3>
-      <p>Ton profil Discord affiche ton score en direct, l'arène, le mode, tes stats du match, ta série en cours et la couleur de ton équipe — avec un compte à rebours réel et un bouton pour rejoindre ton Discord.</p>
+    <div class="bt wide reveal">
+      <span class="tag">Nouveau</span>
+      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg></div>
+      <h3>Jouer à distance — LAN virtuel</h3>
+      <p>Partie privée avec tes amis même hors du même réseau. Carte réseau virtuelle, perçage de NAT automatique, partage des cartes Workshop et lobby en direct.</p>
       <div class="bt-demo">
-        <div class="bt-line"><span class="k">Joue à Vault</span><span class="v tnum"><b class="tb">3</b> — <b class="to">1</b> · Champions Field</span></div>
-        <div class="bt-line"><span class="k">3v3 · 2 buts · 1 arrêt</span><span class="v tnum">il reste 2:14</span></div>
+        <div class="bt-line"><span class="k">Ta session</span><span class="v tnum">Hôte · 10.71.0.1</span></div>
+        <div class="bt-line"><span class="k">Lobby</span><span class="v tnum">3 joueurs · LAN actif</span></div>
       </div>
     </div>
-
-    <div class="bt glass tilt reveal third">
+    <div class="bt third reveal">
+      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3h7l4.5 6-8 12-8-12 4.5-6Z"/><path d="M3.6 9h16.8"/></svg></div>
+      <h3>Discord Rich Presence</h3>
+      <p>Ton profil Discord affiche ton score en direct, l'arène, le mode, ta série et la couleur de ton équipe, avec un compte à rebours réel.</p>
+    </div>
+    <div class="bt third reveal">
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3.6 9h16.8M3.6 15h16.8"/></svg></div>
       <h3>Objets personnalisés</h3>
       <p>Balles, boosts et décals maison injectés directement dans le jeu, sans logiciel tiers.</p>
     </div>
-
   </div>
 </section>
 
 <!-- FEATURES -->
 <section class="sec wrap" id="features">
-  <p class="eyebrow reveal">Fonctionnalités</p>
-  <h2 class="reveal">Et toute la personnalisation locale</h2>
-  <p class="lead reveal">Chaque option s'applique uniquement chez toi. Personne d'autre ne voit tes modifications — c'est cosmétique et local.</p>
+  <p class="eyebrow reveal">Personnalisation locale</p>
+  <h2 class="reveal">Et toute la personnalisation, chez toi</h2>
+  <p class="lead reveal">Chaque option s'applique uniquement sur ton écran. Personne d'autre ne voit tes modifications — c'est cosmétique et local.</p>
   <div class="feat-grid">
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-      <h3>Pseudo en jeu</h3>
-      <p>Affiche le pseudo de ton choix directement en jeu, sans jamais modifier ton compte Epic.</p>
-    </div>
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5M3 8v8l9 5 9-5V8"/></svg></div>
-      <h3>Objets &amp; Titres</h3>
-      <p>Choisis et affiche les objets et titres que tu veux, côté client, en quelques clics.</p>
-    </div>
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0Z"/><path d="M9 20h6M12 15v5"/></svg></div>
-      <h3>Rank &amp; MMR</h3>
-      <p>Modifie le rang et le MMR affichés en jeu, du Bronze au Supersonic Legend.</p>
-    </div>
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <h3>Faux amis</h3>
-      <p>Ajoute de faux amis à ta liste, visibles uniquement chez toi.</p>
-    </div>
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div>
-      <h3>Maps custom</h3>
-      <p>Charge une map personnalisée en un clic et lance-toi directement dessus.</p>
-    </div>
-    <div class="feat glass tilt reveal">
-      <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></div>
-      <h3>Presets</h3>
-      <p>Sauvegarde tes configs d'objets et de titres, puis recharge-les instantanément.</p>
-    </div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3>Pseudo en jeu</h3><p>Affiche le pseudo de ton choix, sans jamais toucher à ton compte Epic.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5M3 8v8l9 5 9-5V8"/></svg></div><h3>Objets &amp; Titres</h3><p>Choisis et affiche les objets et titres que tu veux, côté client.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0Z"/><path d="M9 20h6M12 15v5"/></svg></div><h3>Rank &amp; MMR</h3><p>Modifie le rang et le MMR affichés, du Bronze au Supersonic Legend.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Faux amis</h3><p>Ajoute de faux amis à ta liste, visibles uniquement chez toi.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div><h3>Maps custom</h3><p>Charge une map Workshop en un clic et lance-toi directement dessus.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>Fond du menu</h3><p>Remplace l'arène du menu par la map de ton choix — reposée après chaque mise à jour du jeu.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Sons custom</h3><p>Tes propres sons déclenchés par les événements du match.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></div><h3>Presets</h3><p>Sauvegarde tes configs d'objets et de titres, recharge-les instantanément.</p></div>
   </div>
 </section>
 
@@ -496,759 +423,78 @@ footer .disclaimer{color:var(--t3);font-size:12px;max-width:620px;margin:22px au
   <p class="eyebrow reveal">Comment ça marche</p>
   <h2 class="reveal">Prêt en trois étapes</h2>
   <div class="steps">
-    <div class="step glass tilt reveal"><div class="num">1</div><h3>Télécharge</h3><p>Récupère Vault.exe depuis le bouton de téléchargement. Rien à installer, rien à configurer.</p></div>
-    <div class="step glass tilt reveal"><div class="num">2</div><h3>Lance Vault</h3><p>Ouvre l'app, choisis ton pseudo, tes objets, ton rank, puis active l'injection.</p></div>
-    <div class="step glass tilt reveal"><div class="num">3</div><h3>Joue</h3><p>Lance Rocket League depuis Vault — tes personnalisations s'appliquent en jeu, en local.</p></div>
-  </div>
-</section>
-
-<!-- GRATUIT -->
-<section class="sec wrap" id="pricing">
-  <p class="eyebrow reveal">Tarif</p>
-  <h2 class="reveal">C'est gratuit.</h2>
-  <p class="lead reveal">Plus de licence, plus d'abonnement. Vault est gratuit et le reste — toutes fonctionnalités comprises.</p>
-  <div class="free-card glass reveal">
-    <div class="big">0 €</div>
-    <p class="sub2">Tous les modules, toutes les mises à jour, sans compte à créer ni carte à renseigner.</p>
-    <ul class="free-list">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tous les modules</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Mises à jour incluses</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Aucun compte requis</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sans installation</li>
-    </ul>
-    <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe" class="btn btn-primary">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-      Télécharger Vault
-    </a>
-  </div>
-</section>
-
-<!-- DOWNLOAD CTA -->
-<section class="sec wrap" id="download">
-  <div class="dl-card reveal">
-    <h2>Prêt à jouer avec Vault ?</h2>
-    <p>Un seul fichier à lancer : le dashboard, les overlays, le coaching et le Rich Presence démarrent avec le jeu.</p>
-    <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe" class="btn btn-primary" style="margin-top:26px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-      Télécharger Vault.exe
-    </a>
-    <p class="dl-note">Windows 10 / 11 · gratuit · aucune installation, aucun compte</p>
-  </div>
-</section>
-
-<!-- TIKTOK HQ PATCH -->
-<section class="sec wrap" id="tiktok">
-  <p class="eyebrow reveal">Outil gratuit</p>
-  <h2 class="reveal">TikTok HQ Patch</h2>
-  <p class="lead reveal">Dépose ta vidéo, clique sur Patcher : l'outil injecte de faux samples dans les métadonnées du MP4 pour déclencher le pipeline d'encodage haute qualité de TikTok. Sans ré-encodage, sans perte, 100&nbsp;% dans ton navigateur — rien n'est envoyé en ligne.</p>
-  <div class="tk-card glass reveal">
-    <input type="file" id="tk-file" accept="video/mp4,video/quicktime,.mp4,.mov" hidden>
-    <div class="tk-drop" id="tk-drop" role="button" tabindex="0" aria-label="Choisir une vidéo à patcher">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
-      <div>Glisse ta vidéo ici, ou clique pour la choisir</div>
-      <div class="hint">MP4 / MOV · aucune limite de taille · patch direct sans compression</div>
-    </div>
-    <div class="tk-fileinfo" id="tk-fileinfo" hidden>
-      <span class="lab" id="tk-name"></span><span class="val tnum" id="tk-size"></span>
-    </div>
-    <button class="btn btn-primary tk-btn" id="tk-patch" disabled>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
-      Patcher
-    </button>
-    <div class="tk-log tnum" id="tk-log" hidden></div>
+    <div class="step reveal"><div class="num">1</div><h3>Télécharge</h3><p>Récupère <b>Vault.exe</b> depuis le bouton. Rien à installer, rien à configurer.</p></div>
+    <div class="step reveal"><div class="num">2</div><h3>Lance</h3><p>Ouvre Vault avant Rocket League. Il détecte ton jeu et se connecte tout seul.</p></div>
+    <div class="step reveal"><div class="num">3</div><h3>Joue</h3><p>Stats, overlays, personnalisation et parties à distance — tout est à un clic dans la fenêtre.</p></div>
   </div>
 </section>
 
 <!-- FAQ -->
 <section class="sec wrap" id="faq">
   <p class="eyebrow reveal">FAQ</p>
-  <h2 class="reveal">Questions fréquentes</h2>
-  <div class="faq-list">
-    <div class="faq reveal"><button>Est-ce que les autres joueurs voient mes modifications ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="ans"><p>Non. Vault applique tout <b>en local</b>, uniquement sur ton client. Ton pseudo, tes objets, ton rank et tes faux amis ne sont visibles que chez toi — rien n'est envoyé aux autres joueurs ni modifié sur ton compte.</p></div></div>
-    <div class="faq reveal"><button>Dois-je modifier mon compte Epic ou Steam ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="ans"><p>Non. Vault ne touche jamais à ton compte. Tout se passe côté client, et tu retrouves ton affichage normal dès que tu désactives l'injection.</p></div></div>
-    <div class="faq reveal"><button>Vault est-il vraiment gratuit ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="ans"><p>Oui. Vault était payant, il ne l'est plus : tous les modules sont accessibles sans licence, sans abonnement et sans compte à créer.</p></div></div>
-    <div class="faq reveal"><button>Vault reste-t-il compatible avec les mises à jour de Rocket League ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="ans"><p>On publie des mises à jour régulières pour suivre les versions du jeu. Pense à toujours télécharger la dernière version de Vault pour rester compatible.</p></div></div>
+  <h2 class="reveal">Les questions fréquentes</h2>
+  <div class="faq" style="margin-top:36px">
+    <details class="qa reveal"><summary>Est-ce que c'est gratuit ?<span class="pm">+</span></summary><div class="a">Oui, entièrement. Vault se télécharge et s'utilise gratuitement, sans compte payant.</div></details>
+    <details class="qa reveal"><summary>C'est un cheat ? Je risque un ban ?<span class="pm">+</span></summary><div class="a">Non. La personnalisation (pseudo, rank, objets, titres) est <b>purement cosmétique et locale</b> : elle ne change que ce que TU vois sur ton écran, jamais ton compte ni ce que voient les autres joueurs en ligne.</div></details>
+    <details class="qa reveal"><summary>Comment marche le jeu à distance ?<span class="pm">+</span></summary><div class="a">Vault utilise le vrai mode LAN de Rocket League. Il crée une carte réseau virtuelle et perce les NAT en pair-à-pair, pour que le jeu voie tes amis comme sur un réseau local — même à distance. L'installation du réseau se fait une seule fois.</div></details>
+    <details class="qa reveal"><summary>Faut-il installer quelque chose ?<span class="pm">+</span></summary><div class="a">Un seul fichier, <b>Vault.exe</b>. Aucune installation. Le réseau virtuel demande une autorisation Windows une seule fois, à la première utilisation du jeu à distance.</div></details>
+    <details class="qa reveal"><summary>Ça marche sur Epic et Steam ?<span class="pm">+</span></summary><div class="a">Oui, les deux. Vault détecte automatiquement ton installation.</div></details>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- DOWNLOAD -->
+<section class="sec wrap" id="download">
+  <div class="dl reveal">
+    <h2>Prends l'avantage. Gratuitement.</h2>
+    <p>Un seul <b>.exe</b>, rien à installer. Stats, overlays, coaching, personnalisation et parties à distance en LAN virtuel.</p>
+    <div class="hero-cta" style="margin-bottom:0">
+      <a class="btn btn-primary" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Télécharger Vault
+      </a>
+      <a class="btn btn-ghost" href="https://discord.gg/w6pkd4WzJa">Rejoindre le Discord</a>
+    </div>
+    <div class="hero-meta">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 100 % gratuit</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Sans installation</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Mises à jour automatiques</span>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
-    <div class="logo foot-logo">
-      <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="12" cy="12" r="3.4"/><path d="M12 8.6v-1M12 16.4v-1M8.6 12h-1M16.4 12h-1"/></svg></span>
-      Vault
+    <div class="foot">
+      <a href="#top" class="logo"><span class="logo-mark">V</span><b>Vault<span class="dot">.</span></b></a>
+      <div class="foot-links">
+        <a href="#lan">Jouer à distance</a>
+        <a href="#modules">Modules</a>
+        <a href="#features">Personnalisation</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">Télécharger</a>
+        <a href="https://discord.gg/w6pkd4WzJa">Discord</a>
+      </div>
     </div>
-    <p class="made">Fait avec <span class="h">&#9829;</span> par Esquie</p>
-    <p class="disclaimer">Vault est un outil de personnalisation local pour Rocket League. Toutes les modifications sont côté client et visibles uniquement par toi. Vault n'est pas affilié à Psyonix ni à Epic Games. Utilise-le à tes propres risques, dans le respect des conditions d'utilisation du jeu.</p>
+    <p class="foot-note">Vault est un outil communautaire gratuit pour Rocket League. La personnalisation est locale et cosmétique. Vault n'est pas affilié à Psyonix ou Epic Games.</p>
   </div>
 </footer>
 
-<!-- Three.js (glass hero scene) -->
-<script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
 <script>
-(function(){
-  'use strict';
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var coarse = window.matchMedia('(pointer: coarse)').matches;
+// nav : etat scrolled + menu mobile
+const nav = document.getElementById('nav');
+addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 12), {passive:true});
+const burger = document.getElementById('burger'), links = document.getElementById('navlinks');
+burger.addEventListener('click', () => links.classList.toggle('open'));
+links.addEventListener('click', e => { if (e.target.tagName === 'A') links.classList.remove('open'); });
 
-  /* ---------- nav scrolled state ---------- */
-  var nav = document.getElementById('nav');
-  var onScroll = function(){ nav.classList.toggle('scrolled', window.scrollY > 20); };
-  onScroll();
-  window.addEventListener('scroll', onScroll, {passive:true});
-
-  /* ---------- 3D reveal on scroll ---------- */
-  if('IntersectionObserver' in window){
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-      });
-    }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
-    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
-  } else {
-    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
-  }
-
-  /* ---------- feature card cursor glow ---------- */
-  document.querySelectorAll('.feat, .bt').forEach(function(card){
-    card.addEventListener('mousemove', function(e){
-      var r = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    });
-  });
-
-  /* ---------- FAQ accordion ---------- */
-  document.querySelectorAll('.faq').forEach(function(item){
-    var btn = item.querySelector('button'), ans = item.querySelector('.ans');
-    btn.addEventListener('click', function(){
-      var open = item.classList.contains('open');
-      document.querySelectorAll('.faq').forEach(function(f){
-        f.classList.remove('open');
-        f.querySelector('.ans').style.maxHeight = null;
-      });
-      if(!open){ item.classList.add('open'); ans.style.maxHeight = ans.scrollHeight + 'px'; }
-    });
-  });
-
-  /* ---------- CSS 3D tilt (cards follow cursor) ---------- */
-  if(!reduce && !coarse && window.matchMedia('(min-width: 861px)').matches){
-    document.querySelectorAll('.tilt').forEach(function(el){
-      var max = el.classList.contains('preview-card') ? 8 : 6;
-      var pop = el.classList.contains('preview-card') ? 26 : 16;
-      el.addEventListener('mousemove', function(e){
-        var r = el.getBoundingClientRect();
-        var px = (e.clientX - r.left) / r.width - 0.5;
-        var py = (e.clientY - r.top) / r.height - 0.5;
-        el.style.transform = 'perspective(1000px) rotateY(' + (px*max).toFixed(2) + 'deg) rotateX(' + (-py*max).toFixed(2) + 'deg) translateZ(' + pop + 'px)';
-      });
-      el.addEventListener('mouseleave', function(){ el.style.transform = ''; });
-    });
-  }
-
-  /* ---------- Three.js : terrain, ballon et buts ----------
-     La scene gere elle-meme prefers-reduced-motion (rendu fixe, sans boucle). */
-  (function(){
-    var canvas = document.getElementById('scene');
-    if(!canvas || !window.THREE){ return; }
-    try{
-      var THREE = window.THREE;
-      var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      if('outputEncoding' in renderer && THREE.sRGBEncoding){ renderer.outputEncoding = THREE.sRGBEncoding; }
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.05;
-
-      var scene = new THREE.Scene();
-      var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
-      camera.position.set(0, 0, 7);
-
-      /* procedural environment map for realistic glass refraction */
-      var ec = document.createElement('canvas'); ec.width = 512; ec.height = 256;
-      var ex = ec.getContext('2d');
-      var grad = ex.createLinearGradient(0, 0, 0, 256);
-      grad.addColorStop(0, '#1b2a48'); grad.addColorStop(0.5, '#0b0b0f'); grad.addColorStop(1, '#05070d');
-      ex.fillStyle = grad; ex.fillRect(0, 0, 512, 256);
-      var spot = function(x, y, r, c){
-        var g = ex.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)');
-        ex.fillStyle = g; ex.fillRect(0, 0, 512, 256);
-      };
-      spot(140, 70, 160, 'rgba(74,165,255,0.55)');
-      spot(400, 180, 170, 'rgba(10,132,255,0.35)');
-      spot(300, 40, 120, 'rgba(255,255,255,0.28)');
-      var envTex = new THREE.CanvasTexture(ec);
-      envTex.mapping = THREE.EquirectangularReflectionMapping;
-      var envMap = envTex;
-      try{
-        var pmrem = new THREE.PMREMGenerator(renderer);
-        envMap = pmrem.fromEquirectangular(envTex).texture;
-        pmrem.dispose(); envTex.dispose();
-      }catch(pe){ /* fall back to raw equirect texture */ }
-      scene.environment = envMap;
-
-      /* lights */
-      // Eclairage de stade : une equipe de chaque cote. C'est lui qui donne au
-      // verre quelque chose a refracter, maintenant que les halos flous ont
-      // disparu de la page.
-      scene.add(new THREE.AmbientLight(0x9fc0ff, 0.32));
-      var key = new THREE.DirectionalLight(0xffffff, 1.05); key.position.set(3, 7, 5); scene.add(key);
-      var blueSide = new THREE.PointLight(0x2E9BFF, 2.6, 26); blueSide.position.set(-5.5, 1.4, 2.5); scene.add(blueSide);
-      var orangeSide = new THREE.PointLight(0xFF7A18, 2.2, 26); orangeSide.position.set(5.5, 1.2, -2.0); scene.add(orangeSide);
-
-      var glass = new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(0xbcd8ff),
-        metalness: 0.0, roughness: 0.13, transmission: 1.0, thickness: 1.4, ior: 1.3,
-        clearcoat: 1.0, clearcoatRoughness: 0.18,
-        attenuationColor: new THREE.Color(0x0a84ff), attenuationDistance: 3.4,
-        envMapIntensity: 1.1, transparent: true
-      });
-
-      var group = new THREE.Group(); scene.add(group);
-      var mobile = window.innerWidth < 760;
-
-      // --- terrain -----------------------------------------------------
-      // Trace au sol en lignes fines : le contour, la ligne mediane, le rond
-      // central et les surfaces de but suffisent a rendre le terrain
-      // identifiable sans surcharger le fond.
-      var LX = 5.6, LZ = 8.2, FY = -2.35;              // demi-largeur, demi-longueur
-      var lineMat = new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.16 });
-      var lineSoft = new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.09 });
-
-      function poly(points, mat, closed){
-        var v = [];
-        for(var i=0;i<points.length;i++){
-          var a = points[i], b = points[(i+1) % points.length];
-          if(!closed && i === points.length-1) break;
-          v.push(a[0], FY, a[1], b[0], FY, b[1]);
-        }
-        var g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-        return new THREE.LineSegments(g, mat);
-      }
-
-      group.add(poly([[-LX,-LZ],[LX,-LZ],[LX,LZ],[-LX,LZ]], lineMat, true));   // contour
-      group.add(poly([[-LX,0],[LX,0]], lineMat, false));                        // mediane
-      var circle = [];
-      for(var a=0; a<48; a++){ var th = a/48*Math.PI*2; circle.push([Math.cos(th)*1.5, Math.sin(th)*1.5]); }
-      group.add(poly(circle, lineMat, true));                                   // rond central
-      [-1, 1].forEach(function(s){
-        group.add(poly([[-2.4, s*LZ],[-2.4, s*(LZ-1.7)],[2.4, s*(LZ-1.7)],[2.4, s*LZ]], lineSoft, false));
-      });
-
-      // --- buts ---------------------------------------------------------
-      // Cadre simple, teinte de la couleur de l'equipe qui le defend.
-      function goal(z, color){
-        var w = 2.5, h = 1.35;
-        var m = new THREE.LineBasicMaterial({ color:color, transparent:true, opacity:0.5 });
-        var v = [ -w,FY,z,  -w,FY+h,z,   -w,FY+h,z,  w,FY+h,z,   w,FY+h,z,  w,FY,z ];
-        var g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-        return new THREE.LineSegments(g, m);
-      }
-      group.add(goal(-LZ, 0x2E9BFF));
-      group.add(goal(LZ, 0xFF7A18));
-
-      // --- pastilles de boost --------------------------------------------
-      var padGeo = new THREE.RingGeometry(0.14, 0.2, 6);
-      var padMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.22, side:THREE.DoubleSide });
-      var pads = [];
-      [[-LX+1.1,-LZ+1.6],[LX-1.1,-LZ+1.6],[-LX+1.1,LZ-1.6],[LX-1.1,LZ-1.6],
-       [-LX+1.1,0],[LX-1.1,0],[0,-LZ+2.6],[0,LZ-2.6]].forEach(function(p){
-        var m = new THREE.Mesh(padGeo, padMat.clone());
-        m.position.set(p[0], FY+0.01, p[1]);
-        m.rotation.x = -Math.PI/2;
-        m.userData.ph = Math.random()*Math.PI*2;
-        group.add(m); pads.push(m);
-      });
-
-      // --- ballon ---------------------------------------------------------
-      // Le ballon de Rocket League est une sphere a facettes : un icosaedre
-      // subdivise en donne la lecture immediate, double d'un filaire pour que
-      // les faces restent visibles a travers le verre.
-      var ball = new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, 3), glass);
-      var ballWire = new THREE.LineSegments(
-        new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(1.27, 1)),
-        new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.30 })
-      );
-      var ballGroup = new THREE.Group();
-      ballGroup.add(ball); ballGroup.add(ballWire);
-      ballGroup.position.set(0, 0.15, 0);
-      group.add(ballGroup);
-
-      // Ombre portee au sol : sans elle, le ballon flotte sans rapport au terrain.
-      var shadow = new THREE.Mesh(
-        new THREE.CircleGeometry(1.0, 40),
-        new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.34 })
-      );
-      shadow.rotation.x = -Math.PI/2;
-      shadow.position.set(0, FY+0.02, 0);
-      group.add(shadow);
-
-      if(mobile){ pads.forEach(function(p){ p.visible = false; }); }
-
-      var tmx = 0, tmy = 0, mx = 0, my = 0, sy = 0;
-      window.addEventListener('pointermove', function(e){
-        tmx = (e.clientX / window.innerWidth - 0.5);
-        tmy = (e.clientY / window.innerHeight - 0.5);
-      }, {passive:true});
-      window.addEventListener('scroll', function(){ sy = window.scrollY; }, {passive:true});
-
-      var resize = function(){
-        var w = window.innerWidth, h = window.innerHeight;
-        camera.aspect = w / h; camera.updateProjectionMatrix();
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setSize(w, h);
-      };
-      window.addEventListener('resize', resize);
-
-      // Vue basse et inclinee : on regarde le terrain depuis le bord, comme au
-      // coup d'envoi. Le groupe est recule et descendu pour passer SOUS le bloc
-      // de texte du hero au lieu de le traverser.
-      group.rotation.x = 0.30;
-      group.scale.setScalar(mobile ? 0.5 : 0.68);
-      group.position.set(0, -1.5, 0);
-      camera.position.set(0, 1.5, 10.5);
-
-      var clock = new THREE.Clock();
-      var raf;
-      var frame = function(){
-        var t = clock.getElapsedTime();
-        mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
-
-        group.rotation.y = t * 0.045 + mx * 0.35;
-        group.rotation.x = 0.30 + my * 0.12;
-        group.position.y = -1.5 + sy * 0.0016;
-
-        // Le ballon rebondit doucement ; son ombre se resserre et fonce quand il
-        // redescend, ce qui suffit a ancrer le mouvement.
-        var bounce = Math.abs(Math.sin(t * 0.9)) * 0.55;
-        ballGroup.position.y = 0.05 + bounce;
-        ballGroup.rotation.y += 0.0032;
-        ballGroup.rotation.x += 0.0016;
-        var k = 1 - bounce * 0.45;
-        shadow.scale.setScalar(Math.max(0.35, k));
-        shadow.material.opacity = 0.34 * k;
-
-        for(var i=0;i<pads.length;i++){
-          pads[i].material.opacity = 0.14 + Math.sin(t*1.6 + pads[i].userData.ph) * 0.08;
-        }
-
-        camera.position.x = mx * 0.9;
-        camera.position.y = 1.5 - my * 0.5;
-        camera.lookAt(0, -0.9, 0);
-
-        renderer.render(scene, camera);
-        raf = requestAnimationFrame(frame);
-      };
-
-      if(reduce){ resize(); renderer.render(scene, camera); }
-      else { frame(); }
-    }catch(err){ /* CDN blocked or WebGL unavailable: CSS ambient background stays */ }
-  })();
-})();
-</script>
-
-<!-- TikTok HQ Patch — portage JS de tiktok_quality.py (méthode V2, patch direct sans compression).
-     Injecte 9x de faux samples dans les tables moov (stts/stsz/stsc/stco + durée mdhd)
-     pour déclencher le pipeline d'encodage HQ de TikTok. Le mdat n'est jamais chargé en RAM :
-     le fichier de sortie référence des tranches (slices) du fichier d'origine. -->
-<script>
-(function(){
-'use strict';
-var FAKE_SAMPLE = new Uint8Array([0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x00]);
-var FAKE_SIZE = 8, FAKE_MULT = 9, U32_MAX = 0xFFFFFFFF;
-var CONTAINERS = {moov:1, trak:1, mdia:1, minf:1, stbl:1};
-
-var input   = document.getElementById('tk-file');
-var drop    = document.getElementById('tk-drop');
-var infoRow = document.getElementById('tk-fileinfo');
-var nameEl  = document.getElementById('tk-name');
-var sizeEl  = document.getElementById('tk-size');
-var btn     = document.getElementById('tk-patch');
-var logBox  = document.getElementById('tk-log');
-if(!input || !drop || !btn || !logBox){ return; }
-
-var currentFile = null, lastUrl = null;
-
-function fmtMB(b){ return (b / 1048576).toFixed(1) + ' MB'; }
-function logLine(msg, cls){
-  var d = document.createElement('div');
-  if(cls){ d.className = cls; }
-  d.textContent = msg;
-  logBox.appendChild(d);
-  logBox.scrollTop = logBox.scrollHeight;
-}
-
-/* ---------- helpers binaires ---------- */
-function str4(u8, o){ return String.fromCharCode(u8[o], u8[o+1], u8[o+2], u8[o+3]); }
-function concatU8(parts){
-  var len = 0, i, off = 0;
-  for(i = 0; i < parts.length; i++){ len += parts[i].length; }
-  var out = new Uint8Array(len);
-  for(i = 0; i < parts.length; i++){ out.set(parts[i], off); off += parts[i].length; }
-  return out;
-}
-function makeBox(type, payload){
-  var size = 8 + payload.length;
-  if(size > U32_MAX){ throw new Error('Box ' + type + ' dépasse 4 Go, non supporté ici.'); }
-  var out = new Uint8Array(size);
-  new DataView(out.buffer).setUint32(0, size);
-  for(var i = 0; i < 4; i++){ out[4+i] = type.charCodeAt(i); }
-  out.set(payload, 8);
-  return out;
-}
-
-/* ---------- parsing MP4 (ISO BMFF) ---------- */
-function parseBoxes(u8, dv, start, end){
-  var boxes = [], off = start;
-  while(off + 8 <= end){
-    var small = dv.getUint32(off);
-    var type = str4(u8, off + 4);
-    var size = small, header = 8;
-    if(small === 1){
-      if(off + 16 > end){ throw new Error('Box incomplète : ' + type); }
-      size = Number(dv.getBigUint64(off + 8)); header = 16;
-    } else if(small === 0){ size = end - off; }
-    if(size < header || off + size > end){
-      throw new Error('Taille invalide dans la box « ' + type + ' »');
-    }
-    var box = {type:type, offset:off, size:size, headerSize:header,
-               contentStart:off + header, end:off + size, children:[]};
-    if(CONTAINERS[type]){ box.children = parseBoxes(u8, dv, box.contentStart, box.end); }
-    boxes.push(box);
-    off += size;
-  }
-  return boxes;
-}
-function findChild(box, t){
-  for(var i = 0; i < box.children.length; i++){ if(box.children[i].type === t){ return box.children[i]; } }
-  return null;
-}
-function findDesc(box, path){
-  var cur = box;
-  for(var i = 0; i < path.length; i++){ cur = findChild(cur, path[i]); if(!cur){ return null; } }
-  return cur;
-}
-function handlerType(u8, trak){
-  var hdlr = findDesc(trak, ['mdia', 'hdlr']);
-  if(!hdlr || hdlr.contentStart + 12 > hdlr.end){ return null; }
-  return str4(u8, hdlr.contentStart + 8);
-}
-
-/* ---------- tables d'échantillons ---------- */
-function parseStsz(dv, stsz){
-  var p = stsz.contentStart;
-  var sampleSize = dv.getUint32(p + 4), count = dv.getUint32(p + 8);
-  var sizes = new Uint32Array(count);
-  if(sampleSize){ sizes.fill(sampleSize); return sizes; }
-  if(p + 12 + count * 4 > stsz.end){ throw new Error('stsz trop petite pour le nombre de samples déclaré.'); }
-  for(var i = 0; i < count; i++){ sizes[i] = dv.getUint32(p + 12 + i * 4); }
-  return sizes;
-}
-function parseStsc(dv, stsc){
-  var p = stsc.contentStart, count = dv.getUint32(p + 4);
-  if(p + 8 + count * 12 > stsc.end){ throw new Error('stsc trop petite.'); }
-  var rows = [];
-  for(var i = 0; i < count; i++){
-    var o = p + 8 + i * 12;
-    rows.push([dv.getUint32(o), dv.getUint32(o + 4), dv.getUint32(o + 8)]);
-  }
-  return rows;
-}
-function parseChunkOffsets(dv, box){
-  var p = box.contentStart, count = dv.getUint32(p + 4), out = [], i;
-  if(box.type === 'stco'){
-    if(p + 8 + count * 4 > box.end){ throw new Error('stco trop petite.'); }
-    for(i = 0; i < count; i++){ out.push(dv.getUint32(p + 8 + i * 4)); }
-  } else {
-    if(p + 8 + count * 8 > box.end){ throw new Error('co64 trop petite.'); }
-    for(i = 0; i < count; i++){ out.push(Number(dv.getBigUint64(p + 8 + i * 8))); }
-  }
-  return out;
-}
-function buildMdhd(u8, mdhd, duration){
-  var payload = u8.slice(mdhd.contentStart, mdhd.end);
-  var dv = new DataView(payload.buffer);
-  var version = payload[0];
-  if(version === 0){
-    if(duration > U32_MAX){
-      throw new Error('Durée patchée trop grande pour un mdhd v0 (vidéo trop longue pour le patch direct). '
-                      + 'Ré-encode d\'abord la vidéo (script Python, --mode hd).');
-    }
-    dv.setUint32(16, duration);
-  } else if(version === 1){
-    dv.setBigUint64(24, BigInt(duration));
-  } else {
-    throw new Error('Version mdhd non supportée : ' + version);
-  }
-  return makeBox('mdhd', payload);
-}
-function buildStts(realCount, fakeCount, delta){
-  var p = new Uint8Array(24), dv = new DataView(p.buffer);
-  dv.setUint32(4, 2);
-  dv.setUint32(8, realCount);  dv.setUint32(12, delta);
-  dv.setUint32(16, fakeCount); dv.setUint32(20, delta);
-  return makeBox('stts', p);
-}
-function buildStsz(sizes, fakeCount){
-  var total = sizes.length + fakeCount;
-  var p = new Uint8Array(12 + total * 4), dv = new DataView(p.buffer);
-  dv.setUint32(8, total);
-  var i;
-  for(i = 0; i < sizes.length; i++){ dv.setUint32(12 + i * 4, sizes[i]); }
-  for(i = 0; i < fakeCount; i++){ dv.setUint32(12 + (sizes.length + i) * 4, FAKE_SIZE); }
-  return makeBox('stsz', p);
-}
-function buildStsc(rows, chunkCount){
-  rows = rows.map(function(r){ return r.slice(); });
-  if(!rows.length || rows[rows.length - 1][1] !== 1){ rows.push([chunkCount + 1, 1, 1]); }
-  var p = new Uint8Array(8 + rows.length * 12), dv = new DataView(p.buffer);
-  dv.setUint32(4, rows.length);
-  for(var i = 0; i < rows.length; i++){
-    dv.setUint32(8 + i * 12, rows[i][0]);
-    dv.setUint32(12 + i * 12, rows[i][1]);
-    dv.setUint32(16 + i * 12, rows[i][2]);
-  }
-  return makeBox('stsc', p);
-}
-function buildChunkOffsetBox(offsets, delta, fakeOffset, fakeCount){
-  var out = new Array(offsets.length + (fakeOffset !== null ? fakeCount : 0));
-  var i, wide = false;
-  for(i = 0; i < offsets.length; i++){
-    out[i] = offsets[i] + delta;
-    if(out[i] > U32_MAX){ wide = true; }
-  }
-  if(fakeOffset !== null){
-    if(fakeOffset > U32_MAX){ wide = true; }
-    for(i = 0; i < fakeCount; i++){ out[offsets.length + i] = fakeOffset; }
-  }
-  var p, dv;
-  if(wide){
-    p = new Uint8Array(8 + out.length * 8); dv = new DataView(p.buffer);
-    dv.setUint32(4, out.length);
-    for(i = 0; i < out.length; i++){ dv.setBigUint64(8 + i * 8, BigInt(out[i])); }
-    return makeBox('co64', p);
-  }
-  p = new Uint8Array(8 + out.length * 4); dv = new DataView(p.buffer);
-  dv.setUint32(4, out.length);
-  for(i = 0; i < out.length; i++){ dv.setUint32(8 + i * 4, out[i]); }
-  return makeBox('stco', p);
-}
-function rebuildBox(u8, box, repl){
-  var found = repl.get(box);
-  if(found){ return found; }
-  if(!box.children.length){ return u8.subarray(box.offset, box.end); }
-  var parts = box.children.map(function(c){ return rebuildBox(u8, c, repl); });
-  return makeBox(box.type, concatU8(parts));
-}
-function collectOffsetBoxes(moov){
-  var out = [];
-  moov.children.forEach(function(trak){
-    if(trak.type !== 'trak'){ return; }
-    var stbl = findDesc(trak, ['mdia', 'minf', 'stbl']);
-    if(!stbl){ return; }
-    var b = findChild(stbl, 'stco') || findChild(stbl, 'co64');
-    if(b){ out.push(b); }
-  });
-  return out;
-}
-
-/* ---------- scan des boxes racine (streaming, 16 octets par box) ---------- */
-async function scanTop(f){
-  var boxes = [], off = 0, size = f.size;
-  while(off + 8 <= size){
-    var head = new Uint8Array(await f.slice(off, Math.min(off + 16, size)).arrayBuffer());
-    var hv = new DataView(head.buffer);
-    var small = hv.getUint32(0);
-    var type = str4(head, 4);
-    var bsize = small, h = 8;
-    if(small === 1){
-      if(head.length < 16){ throw new Error('Box incomplète : ' + type); }
-      bsize = Number(hv.getBigUint64(8)); h = 16;
-    } else if(small === 0){ bsize = size - off; }
-    if(bsize < h || off + bsize > size){
-      var names = {};
-      boxes.forEach(function(b){ names[b.type] = 1; });
-      if(names.ftyp && names.moov && names.mdat){
-        logLine('Attention : données parasites ignorées en fin de fichier.', 'dim');
-        break;
-      }
-      throw new Error('Taille invalide dans la box racine « ' + type + ' » — pas un MP4/MOV standard ?');
-    }
-    boxes.push({type:type, offset:off, size:bsize, header:h});
-    off += bsize;
-  }
-  return boxes;
-}
-
-/* ---------- patch V2 (mode off : direct, sans perte) ---------- */
-async function patchFile(f){
-  var top = await scanTop(f);
-  logLine('Boxes racine : ' + top.map(function(b){ return b.type; }).join(', '), 'dim');
-
-  function pick(name){
-    for(var i = 0; i < top.length; i++){ if(top[i].type === name){ return top[i]; } }
-    return null;
-  }
-  var ftyp = pick('ftyp'), moov = pick('moov'), mdat = pick('mdat');
-  if(!ftyp){ throw new Error('Box « ftyp » introuvable : ce n\'est pas un MP4 valide.'); }
-  if(!moov){ throw new Error('Box « moov » introuvable : métadonnées MP4 manquantes.'); }
-  if(!mdat){ throw new Error('Box « mdat » introuvable : aucune donnée média.'); }
-  if(top.filter(function(b){ return b.type === 'mdat'; }).length > 1){
-    throw new Error('Plusieurs box mdat : non supporté par le patch direct.');
-  }
-
-  var ftypBytes = new Uint8Array(await f.slice(ftyp.offset, ftyp.offset + ftyp.size).arrayBuffer());
-  var preservedParts = [], preservedLen = 0;
-  top.forEach(function(b){
-    if(b.type === 'ftyp' || b.type === 'moov' || b.type === 'mdat'){ return; }
-    preservedParts.push(f.slice(b.offset, b.offset + b.size));
-    preservedLen += b.size;
-  });
-
-  var moovU8 = new Uint8Array(await f.slice(moov.offset, moov.offset + moov.size).arrayBuffer());
-  var moovDv = new DataView(moovU8.buffer);
-  var moovBox = parseBoxes(moovU8, moovDv, 0, moovU8.length)[0];
-
-  var videoTrak = null;
-  for(var i = 0; i < moovBox.children.length; i++){
-    var c = moovBox.children[i];
-    if(c.type === 'trak' && handlerType(moovU8, c) === 'vide'){ videoTrak = c; break; }
-  }
-  if(!videoTrak){ throw new Error('Piste vidéo introuvable.'); }
-
-  var stbl = findDesc(videoTrak, ['mdia', 'minf', 'stbl']);
-  var mdhd = findDesc(videoTrak, ['mdia', 'mdhd']);
-  var stts = stbl && findChild(stbl, 'stts');
-  var stsc = stbl && findChild(stbl, 'stsc');
-  var stsz = stbl && findChild(stbl, 'stsz');
-  var videoCo = stbl && (findChild(stbl, 'stco') || findChild(stbl, 'co64'));
-  if(!stbl || !mdhd || !stts || !stsc || !stsz || !videoCo){
-    throw new Error('Boxes requises manquantes (mdhd/stts/stsc/stsz/stco).');
-  }
-
-  var sizes = parseStsz(moovDv, stsz);
-  var stscRows = parseStsc(moovDv, stsc);
-  var chunkOffsets = parseChunkOffsets(moovDv, videoCo);
-  var offsetBoxes = collectOffsetBoxes(moovBox);
-
-  var mv = mdhd.contentStart;
-  var timescale = moovU8[mv] === 0 ? moovDv.getUint32(mv + 12) : moovDv.getUint32(mv + 20);
-  var sp = stts.contentStart;
-  var sampleDelta = moovDv.getUint32(sp + 4) >= 1 ? moovDv.getUint32(sp + 12) : 1500;
-
-  var realCount = sizes.length;
-  var fakeCount = realCount * FAKE_MULT;
-  var newDuration = (realCount + fakeCount) * sampleDelta;
-
-  logLine('Samples réels : ' + realCount + '  |  faux : ' + fakeCount + ' (x' + FAKE_MULT + ')');
-  logLine('Timescale : ' + timescale + '  |  delta : ' + sampleDelta
-          + '  |  chunks vidéo : ' + chunkOffsets.length, 'dim');
-
-  var fixed = new Map();
-  fixed.set(mdhd, buildMdhd(moovU8, mdhd, newDuration));
-  fixed.set(stts, buildStts(realCount, fakeCount, sampleDelta));
-  fixed.set(stsc, buildStsc(stscRows, chunkOffsets.length));
-  fixed.set(stsz, buildStsz(sizes, fakeCount));
-
-  var oldMdatContent = mdat.offset + mdat.header;
-  var mdatPayload = mdat.size - mdat.header;
-  var newPayload = mdatPayload + FAKE_SAMPLE.length;
-  var mdatHeaderSize = (newPayload + 8 > U32_MAX) ? 16 : 8;
-
-  /* itère jusqu'à stabilisation des offsets (la taille de moov dépend de stco/co64) */
-  var delta = 0, fakeOffset = 0, moovBytes = null, stable = false;
-  for(var pass = 0; pass < 8; pass++){
-    var repl = new Map(fixed);
-    for(var k = 0; k < offsetBoxes.length; k++){
-      var ob = offsetBoxes[k];
-      repl.set(ob, buildChunkOffsetBox(parseChunkOffsets(moovDv, ob), delta,
-               ob === videoCo ? fakeOffset : null, fakeCount));
-    }
-    moovBytes = rebuildBox(moovU8, moovBox, repl);
-    var newMdatStart = ftypBytes.length + moovBytes.length + preservedLen + mdatHeaderSize;
-    var nd = newMdatStart - oldMdatContent;
-    var nf = newMdatStart + mdatPayload;
-    if(nd === delta && nf === fakeOffset){ stable = true; break; }
-    delta = nd; fakeOffset = nf;
-  }
-  if(!stable){ throw new Error('Les offsets ne se stabilisent pas (fichier atypique).'); }
-
-  var header, hv2;
-  if(mdatHeaderSize === 16){
-    header = new Uint8Array(16); hv2 = new DataView(header.buffer);
-    hv2.setUint32(0, 1);
-    hv2.setBigUint64(8, BigInt(newPayload + 16));
-  } else {
-    header = new Uint8Array(8); hv2 = new DataView(header.buffer);
-    hv2.setUint32(0, newPayload + 8);
-  }
-  header[4] = 0x6D; header[5] = 0x64; header[6] = 0x61; header[7] = 0x74; /* 'mdat' */
-
-  logLine('moov patché : ' + moovBytes.length + ' octets  |  delta mdat : '
-          + (delta >= 0 ? '+' : '') + delta, 'dim');
-
-  /* le mdat est référencé par slice : jamais chargé en mémoire */
-  var parts = [ftypBytes, moovBytes].concat(preservedParts);
-  parts.push(header, f.slice(oldMdatContent, oldMdatContent + mdatPayload), FAKE_SAMPLE);
-  return {blob: new Blob(parts, {type:'video/mp4'}), real: realCount, fake: fakeCount};
-}
-
-/* ---------- UI ---------- */
-function setFile(f){
-  if(!f){ return; }
-  currentFile = f;
-  nameEl.textContent = f.name;
-  sizeEl.textContent = fmtMB(f.size);
-  infoRow.hidden = false;
-  btn.disabled = false;
-  logBox.hidden = true;
-  logBox.innerHTML = '';
-}
-
-drop.addEventListener('click', function(){ input.click(); });
-drop.addEventListener('keydown', function(e){
-  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); input.click(); }
+// reveal au scroll
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+}, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach((el,i) => {
+  el.style.transitionDelay = Math.min(i*40, 240) + 'ms';
+  io.observe(el);
 });
-drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('over'); });
-drop.addEventListener('dragleave', function(){ drop.classList.remove('over'); });
-drop.addEventListener('drop', function(e){
-  e.preventDefault();
-  drop.classList.remove('over');
-  if(e.dataTransfer.files.length){ setFile(e.dataTransfer.files[0]); }
-});
-input.addEventListener('change', function(){
-  if(input.files.length){ setFile(input.files[0]); }
-});
-
-btn.addEventListener('click', async function(){
-  if(!currentFile){ return; }
-  btn.disabled = true;
-  logBox.hidden = false;
-  logBox.innerHTML = '';
-  logLine('Patch de ' + currentFile.name + ' (' + fmtMB(currentFile.size) + ')…');
-  try{
-    var res = await patchFile(currentFile);
-    var stem = currentFile.name.replace(/\.[^.]+$/, '');
-    var outName = stem + '_hq.mp4';
-    if(lastUrl){ URL.revokeObjectURL(lastUrl); }
-    lastUrl = URL.createObjectURL(res.blob);
-    var a = document.createElement('a');
-    a.href = lastUrl;
-    a.download = outName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    logLine('Total déclaré : ' + (res.real + res.fake) + ' samples', 'dim');
-    logLine('Terminé : ' + outName + ' (' + fmtMB(res.blob.size) + ') — téléchargement lancé.', 'ok');
-  }catch(err){
-    logLine('Erreur : ' + (err && err.message ? err.message : err), 'err');
-  }
-  btn.disabled = false;
-});
-})();
 </script>
 </body>
 </html>
