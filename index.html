@@ -60,10 +60,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:60}
 nav.scrolled .nav-inner{background:var(--glass);border-color:var(--hairline);
   backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
 .logo{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.02em}
-.logo-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
-  background:linear-gradient(160deg,var(--accent),color-mix(in srgb,var(--accent) 40%,#000));
-  border:1px solid var(--hairline-strong);color:#fff;font-family:var(--display);font-weight:700;font-size:18px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 6px 18px -6px rgba(10,132,255,.6)}
+.logo-mark{width:34px;height:34px;border-radius:11px;object-fit:cover;display:block;
+  border:1px solid var(--hairline-strong);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 18px -6px rgba(10,132,255,.6)}
 .logo b{font-weight:600}
 .logo .dot{color:var(--accent-2)}
 .nav-links{display:flex;gap:30px;align-items:center;font-size:14px;font-weight:500}
@@ -241,7 +240,7 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
 
 <nav id="nav">
   <div class="nav-inner">
-    <a href="#top" class="logo"><span class="logo-mark">V</span><b>Vault<span class="dot">.</span></b></a>
+    <a href="#top" class="logo"><img class="logo-mark" src="vault-logo.png" alt="Vault" width="34" height="34"><b>Vault<span class="dot">.</span></b></a>
     <div class="nav-links" id="navlinks">
       <a href="#lan">Jouer à distance</a>
       <a href="#modules">Modules</a>
@@ -465,7 +464,7 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
 <footer>
   <div class="wrap">
     <div class="foot">
-      <a href="#top" class="logo"><span class="logo-mark">V</span><b>Vault<span class="dot">.</span></b></a>
+      <a href="#top" class="logo"><img class="logo-mark" src="vault-logo.png" alt="Vault" width="34" height="34"><b>Vault<span class="dot">.</span></b></a>
       <div class="foot-links">
         <a href="#lan">Jouer à distance</a>
         <a href="#modules">Modules</a>
