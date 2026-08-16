@@ -20,7 +20,8 @@
   --blur:18px;
   --t1:rgba(255,255,255,.95); --t2:rgba(255,255,255,.62); --t3:rgba(255,255,255,.5);
   --chrome:rgba(255,255,255,.92);
-  --accent:#0A84FF; --accent-2:#4AA5FF; --accent-soft:rgba(10,132,255,.16);
+  --accent:#2E9BFF; --accent-2:#66B6FF; --accent-soft:rgba(46,155,255,.16);
+  --rl-orange:#FF7A18;
   --gold:#FFC24B; --green:#34C759; --pink:#FF7AB0;
   --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Inter,sans-serif;
   --display:"Space Grotesk",-apple-system,system-ui,sans-serif;
@@ -349,7 +350,7 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
 <!-- MODULES -->
 <section class="sec wrap" id="modules">
   <p class="eyebrow reveal">Les modules</p>
-  <h2 class="reveal">Sept modules, une seule fenêtre</h2>
+  <h2 class="reveal">Neuf modules, une seule fenêtre</h2>
   <p class="lead reveal">Vault ne se contente pas de personnaliser ton jeu : il le suit, l'affiche, t'aide à progresser — et te connecte à tes amis.</p>
   <div class="bento">
     <div class="bt wide reveal">
@@ -370,7 +371,7 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
     <div class="bt half reveal">
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2.5"/><path d="M8 21h8M12 18v3"/></svg></div>
       <h3>Overlays en jeu</h3>
-      <p>Rank, boost, scoreboard, FPS et manette/clavier-souris affichés par-dessus Rocket League, positionnables au pixel près. Rien à alt-tabber.</p>
+      <p>Broadcast façon RLCS, rank, boost, scoreboard, manette et clavier-souris, affichés par-dessus Rocket League et positionnables au pixel près. Rien à alt-tabber.</p>
     </div>
     <div class="bt half reveal">
       <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="2.4"/></svg></div>
@@ -397,6 +398,8 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
       <h3>Objets personnalisés</h3>
       <p>Balles, boosts et décals maison injectés directement dans le jeu, sans logiciel tiers.</p>
     </div>
+    <div class="bt third reveal"><div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 9 5 3-5 3z"/></svg></div><h3>Replays</h3><p>Retrouve tes parties, relis-les et partage-les, sans fouiller dans les dossiers du jeu.</p></div>
+    <div class="bt third reveal"><div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div><h3>Maps Workshop</h3><p>Parcours le catalogue, charge une map en un clic, puis envoie-la à toute ta session.</p></div>
   </div>
 </section>
 
@@ -414,6 +417,10 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
     <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>Fond du menu</h3><p>Remplace l'arène du menu par la map de ton choix — reposée après chaque mise à jour du jeu.</p></div>
     <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Sons custom</h3><p>Tes propres sons déclenchés par les événements du match.</p></div>
     <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></div><h3>Presets</h3><p>Sauvegarde tes configs d'objets et de titres, recharge-les instantanément.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H4z"/><path d="M8 20h8M12 16v4"/><path d="m8 11 2.5-3 2 2.5L15 7l3 4"/></svg></div><h3>Écran de chargement</h3><p>Ton image pendant les chargements — ou une différente au hasard sur chaque carte.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v5H3z"/><path d="M3 17h18"/></svg></div><h3>Bandeau RL</h3><p>Ton message défile en bas de l'écran, dans le jeu.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></div><h3>Chat rapide</h3><p>Remplace les messages du quick chat par les tiens.</p></div>
+    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><circle cx="12" cy="14" r="4"/></svg></div><h3>Décals, balles & boosts</h3><p>Tes images sur la carrosserie, tes balles et tes compteurs de boost, injectés dans le jeu.</p></div>
   </div>
 </section>
 
