@@ -2,8 +2,18 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vault",
   "compatibility_date": "2026-08-15",
+  // workers.dev reste actif : c'est l'adresse de repli tant que vault-rl.com est
+  // signale par Google Safe Browsing, et l'adresse de secours si le domaine
+  // venait a expirer.
   "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": true },
+  // Domaine propre. `custom_domain` demande a Cloudflare de creer l'enregistrement
+  // DNS ET d'emettre le certificat TLS : le HTTPS et la redirection depuis HTTP
+  // sont automatiques, il n'y a rien a configurer a la main.
+  "routes": [
+    { "pattern": "vault-rl.com", "custom_domain": true },
+    { "pattern": "www.vault-rl.com", "custom_domain": true }
+  ],
   "assets": { "directory": "." }
 }
