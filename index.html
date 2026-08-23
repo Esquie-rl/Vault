@@ -1,366 +1,859 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vault — Le compagnon tout-en-un de Rocket League</title>
-<meta name="description" content="Stats en direct, overlays en jeu, coaching, Discord Rich Presence, et maintenant jouer à distance avec un LAN virtuel. Gratuit, sans installation, un seul .exe.">
-<meta property="og:title" content="Vault — Le compagnon tout-en-un de Rocket League">
-<meta property="og:description" content="Stats en direct, overlays, coaching, Discord Rich Presence et jeu à distance en LAN virtuel. Gratuit.">
-<meta property="og:type" content="website">
-<!-- Adresse canonique : le site est aussi joignable via GitHub Pages, et deux URL
-     pour un meme contenu se penalisent mutuellement. A METTRE A JOUR le jour ou un
-     domaine propre remplace workers.dev (ici et dans og:url/og:image). -->
-<link rel="canonical" href="https://vault.esquie.workers.dev/">
-<meta property="og:url" content="https://vault.esquie.workers.dev/">
-<!-- Sans og:image, le lien partage sur Discord s'affiche en bloc de texte gris. -->
-<meta property="og:image" content="https://vault.esquie.workers.dev/vault-logo.png">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#08090C">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vault — tout ton Rocket League dans une seule fenêtre</title>
+<meta name="description" content="Stats en direct, overlays en jeu, personnalisation locale, cartes Workshop, sauvegarde des replays — et des parties privées avec tes amis, même à l'autre bout du pays." />
+<link rel="icon" type="image/svg+xml" href="/static/vault-mark.svg" />
+<meta name="theme-color" content="#08090c" />
+<!-- Les polices declarees dans --font-sans / --font-disp doivent etre chargees,
+     sinon la page retombe silencieusement sur les piles systeme et le dessin
+     n'est plus celui qu'on a regle. `display=swap` + des piles de repli reelles
+     font que si le reseau ne repond pas (page servie par l'exe sur une machine
+     hors ligne), le texte s'affiche tout de suite en police systeme. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" />
+<link rel="canonical" href="https://vault-rl.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vault-rl.com/" />
+<meta property="og:title" content="Vault — tout ton Rocket League dans une seule fenêtre" />
+<meta property="og:image" content="https://vault-rl.com/vault-logo.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta property="og:description" content="Stats en direct, overlays en jeu, personnalisation locale, cartes Workshop, sauvegarde des replays — et des parties privées avec tes amis." />
+
+<!-- Les polices viennent du meme executable que la page : cette landing doit
+     s'afficher a l'identique hors ligne, sur le PC ou Vault tourne. Les piles
+     systeme couvrent Windows, macOS et Linux sans requete reseau. -->
 <style>
-:root{
-  --bg:#08090C; --bg2:#0E0F14;
-  --glass:rgba(255,255,255,.075); --glass-2:rgba(255,255,255,.11);
-  --hairline:rgba(255,255,255,.14); --hairline-strong:rgba(255,255,255,.22);
-  --blur:18px;
-  --t1:rgba(255,255,255,.95); --t2:rgba(255,255,255,.62); --t3:rgba(255,255,255,.5);
-  --chrome:rgba(255,255,255,.92);
-  --accent:#2E9BFF; --accent-2:#66B6FF; --accent-soft:rgba(46,155,255,.16);
-  --rl-orange:#FF7A18;
-  --gold:#FFC24B; --green:#34C759; --pink:#FF7AB0;
-  --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Inter,sans-serif;
-  --display:"Space Grotesk",-apple-system,system-ui,sans-serif;
-  --r:24px; --r-sm:16px; --ease:cubic-bezier(.32,.72,0,1); --maxw:1160px;
-  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 24px 60px -24px rgba(0,0,0,.7);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  font-family:var(--font);color:var(--t1);line-height:1.6;overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-  background:
-    radial-gradient(1200px 820px at 50% -12%, #14161f 0%, transparent 62%),
-    radial-gradient(900px 600px at 88% 8%, rgba(10,132,255,.10) 0%, transparent 60%),
-    linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
-  background-attachment:fixed; min-height:100vh;
-}
-::selection{background:rgba(10,132,255,.35);color:#fff}
-a{color:inherit;text-decoration:none}
-svg{display:block}
-:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;border-radius:8px}
-.tnum{font-variant-numeric:tabular-nums}
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:2}
-section{position:relative;z-index:2}
+/* =======================================================================
+   VAULT — LANDING
+   -----------------------------------------------------------------------
+   Portage vanilla des blocs 21st.dev : header-3, hero-section-9, bento
+   grid, card stack, spotlight card, gradient text, pearl button, parallax
+   scrolling et motion footer.
 
-/* grille d'ambiance */
-.grid-fx{position:fixed;inset:0;z-index:1;pointer-events:none;
-  background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
-  background-size:54px 54px;
-  -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 25%,transparent 72%);
-  mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 25%,transparent 72%)}
+   Aucun build, aucun paquet, aucun CDN. Servie telle quelle par l'exe sur
+   /static/site.html, elle marche aussi en double-cliquant le fichier.
 
-/* nav */
-nav{position:fixed;top:0;left:0;right:0;z-index:60}
-.nav-inner{max-width:var(--maxw);margin:14px auto;padding:11px 16px 11px 20px;display:flex;align-items:center;justify-content:space-between;
-  border:1px solid transparent;border-radius:20px;transition:background .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease)}
-nav.scrolled .nav-inner{background:var(--glass);border-color:var(--hairline);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.logo{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.02em}
-.logo-mark{width:34px;height:34px;border-radius:11px;object-fit:cover;display:block;
-  border:1px solid var(--hairline-strong);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 18px -6px rgba(10,132,255,.6)}
-.logo b{font-weight:600}
-.logo .dot{color:var(--accent-2)}
-.nav-links{display:flex;gap:30px;align-items:center;font-size:14px;font-weight:500}
-.nav-links a{color:var(--t2);transition:color .2s}
-.nav-links a:hover{color:var(--t1)}
-.nav-cta{font-weight:600;font-size:14px;padding:9px 18px;border-radius:12px;color:#0A0A0D;background:var(--chrome);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 8px 24px -8px rgba(255,255,255,.35);transition:transform .25s var(--ease)}
-.nav-cta:hover{transform:translateY(-2px)}
-.nav-burger{display:none;background:none;border:0;cursor:pointer;color:var(--t1);padding:6px}
-.nav-burger svg{width:24px;height:24px}
-@media(max-width:820px){
-  .nav-links{position:fixed;inset:70px 14px auto 14px;flex-direction:column;gap:6px;align-items:stretch;padding:14px;
-    background:var(--bg2);border:1px solid var(--hairline);border-radius:18px;box-shadow:var(--glass-shadow);
-    transform:translateY(-12px);opacity:0;pointer-events:none;transition:.25s var(--ease)}
-  .nav-links.open{transform:none;opacity:1;pointer-events:auto}
-  .nav-links a{padding:10px 12px;border-radius:10px}
-  .nav-links a:hover{background:var(--glass)}
-  .nav-burger{display:block}
+   Regle tenue partout : ce qui bouge bouge en transform et opacity. Aucune
+   animation ne touche une propriete de mise en page, donc rien ne force le
+   navigateur a recalculer la page entre deux images.
+   ======================================================================= */
+
+:root {
+  --bg:        #08090c;
+  --bg-soft:   #0d0f14;
+  --panel:     rgba(255,255,255,.022);
+  --line:      rgba(255,255,255,.075);
+  --line-hi:   rgba(255,255,255,.16);
+  --text:      #fafafa;
+  --text-dim:  #a1a1aa;
+  --text-mute: #71717a;
+  --text-faint:#52525b;
+
+  /* Les deux couleurs d'equipe de Rocket League. Ce sont les SEULES couleurs
+     de la marque : tout le reste de la page est du verre neutre. */
+  --blue:      #5AB3FF;
+  --blue-deep: #1E7FE6;
+  --orange:    #FFB067;
+  --orange-deep:#F26A0A;
+
+  --radius:    14px;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-disp: "Space Grotesk", "Segoe UI", var(--font-sans);
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  --maxw: 1160px;
 }
 
-/* boutons */
-.btn{font-family:var(--font);font-weight:600;border:0;cursor:pointer;border-radius:14px;display:inline-flex;align-items:center;gap:10px;
-  transition:transform .3s var(--ease),box-shadow .3s var(--ease);font-size:16px;padding:15px 26px}
-.btn svg{width:19px;height:19px}
-.btn-primary{background:var(--chrome);color:#0A0A0D;box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 14px 44px -14px rgba(255,255,255,.4)}
-.btn-primary:hover{transform:translateY(-3px);box-shadow:inset 0 1px 0 #fff, 0 22px 60px -16px rgba(255,255,255,.55)}
-.btn-ghost{background:var(--glass);color:var(--t1);border:1px solid var(--hairline);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.btn-ghost:hover{transform:translateY(-3px);border-color:var(--hairline-strong);background:var(--glass-2)}
+*, *::before, *::after { box-sizing: border-box; }
 
-/* hero */
-.hero{padding:172px 0 60px;text-align:center}
-.badge{display:inline-flex;align-items:center;gap:9px;font-size:13px;padding:8px 16px;border-radius:30px;
-  border:1px solid var(--hairline);background:var(--glass);color:var(--t2);margin-bottom:28px;
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);box-shadow:var(--glass-shadow)}
-.badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);animation:pulse 1.9s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hero h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,7.6vw,76px);line-height:1.02;letter-spacing:-.035em;margin-bottom:22px;overflow-wrap:break-word}
-.hero h1 .g{color:#fff;text-shadow:0 0 46px rgba(255,255,255,.35)}
-.hero h1 .b{background:linear-gradient(120deg,var(--accent-2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p.sub{font-size:clamp(15px,2vw,20px);color:var(--t2);max-width:660px;margin:0 auto 36px;font-weight:400}
-.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
-.hero-meta{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--t3)}
-.hero-meta span{display:inline-flex;align-items:center;gap:7px}
-.hero-meta svg{width:15px;height:15px;color:var(--accent-2)}
+html { scroll-behavior: smooth; }
 
-/* carte apercu (lobby mock) */
-.preview{margin-top:66px;max-width:820px;margin-left:auto;margin-right:auto}
-.preview-card{border-radius:var(--r);border:1px solid var(--hairline);background:var(--glass);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
-  box-shadow:var(--glass-shadow);overflow:hidden}
-.preview-top{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--hairline)}
-.preview-top .d{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.2)}
-.preview-top .tt{margin-left:8px;font-size:12.5px;color:var(--t3);font-weight:500}
-.preview-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:640px){.preview-body{grid-template-columns:1fr}}
-.pl{display:flex;align-items:center;gap:11px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--hairline)}
-.pl.me{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
-.pl-av{width:36px;height:36px;flex:0 0 36px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;
-  background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,#000))}
-.pl-av.g2{background:linear-gradient(135deg,#8b5cf6,#5b21b6)}
-.pl-av.g3{background:linear-gradient(135deg,var(--green),#1f8f42)}
-.pl-main{min-width:0}
-.pl-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
-.pl-ip{font-size:11px;color:var(--t3);margin-top:2px}
-.pl-badge{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:var(--accent);color:#fff}
-.pl-badge.me{background:rgba(255,255,255,.08);color:var(--t2);border:1px solid var(--hairline)}
-.pl-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 22%,transparent)}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* overflow-x: clip et non hidden : hidden sur <body> casse position:sticky
+     dans certains navigateurs, clip ne le fait pas. */
+  overflow-x: clip;
+}
 
-/* sections generiques */
-.sec{padding:92px 0}
-.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);margin-bottom:14px}
-h2{font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,44px);letter-spacing:-.03em;line-height:1.08;margin-bottom:16px}
-.lead{font-size:clamp(15px,1.7vw,18px);color:var(--t2);max-width:640px;margin-bottom:40px}
+h1, h2, h3 { font-family: var(--font-disp); font-weight: 600; letter-spacing: -.02em; margin: 0; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; }
 
-/* feature phare LAN */
-.spot{border:1px solid var(--hairline);border-radius:var(--r);overflow:hidden;
-  background:linear-gradient(160deg,rgba(10,132,255,.12),rgba(255,255,255,.03));box-shadow:var(--glass-shadow)}
-.spot-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:0}
-@media(max-width:860px){.spot-grid{grid-template-columns:1fr}}
-.spot-l{padding:44px 40px}
-.spot-l .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-2);
-  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:999px;padding:4px 11px;margin-bottom:18px}
-.spot-l h3{font-family:var(--display);font-weight:600;font-size:clamp(22px,3vw,32px);letter-spacing:-.02em;margin-bottom:14px;line-height:1.12}
-.spot-l p{color:var(--t2);font-size:15.5px;margin-bottom:18px}
-.spot-steps{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:6px}
-.spot-steps li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--t1)}
-.spot-steps svg{width:20px;height:20px;flex:0 0 20px;color:var(--green);margin-top:1px}
-.spot-r{padding:34px;border-left:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(600px 300px at 70% 20%,rgba(10,132,255,.14),transparent 70%)}
-@media(max-width:860px){.spot-r{border-left:0;border-top:1px solid var(--hairline)}}
-.net{width:100%;max-width:340px}
-.net-card{border:1px solid var(--hairline);border-radius:14px;background:rgba(0,0,0,.28);padding:14px;margin-bottom:10px;
-  display:flex;align-items:center;gap:11px}
-.net-card:last-child{margin-bottom:0}
-.net-ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-2)}
-.net-ico svg{width:18px;height:18px}
-.net-tx b{display:block;font-size:13.5px}
-.net-tx span{font-size:11.5px;color:var(--t3)}
-.net-line{height:22px;margin:0 auto;width:2px;background:linear-gradient(var(--accent-2),transparent);opacity:.6}
+.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+.balance { text-wrap: balance; }
 
-/* bento modules */
-.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
-.bt{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:24px;background:var(--glass);
-  backdrop-filter:blur(var(--blur)) saturate(1.8);-webkit-backdrop-filter:blur(var(--blur)) saturate(1.8);
-  box-shadow:var(--glass-shadow);transition:transform .3s var(--ease),border-color .3s}
-.bt:hover{transform:translateY(-4px);border-color:var(--hairline-strong)}
-.bt.wide{grid-column:span 4}.bt.half{grid-column:span 3}.bt.third{grid-column:span 2}
-@media(max-width:900px){.bt.wide,.bt.half,.bt.third{grid-column:span 6}}
-.bt .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-2);margin-bottom:12px}
-.bt-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;
-  background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent-2)}
-.bt-ico svg{width:22px;height:22px}
-.bt h3{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.01em;margin-bottom:8px}
-.bt p{color:var(--t2);font-size:14px}
-.bt-demo{margin-top:16px;border-top:1px solid var(--hairline);padding-top:14px;display:flex;flex-direction:column;gap:8px}
-.bt-line{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px}
-.bt-line .k{color:var(--t3)}
-.bt-line .v{font-weight:600}
-.bt-line .tb{color:var(--accent-2)}.bt-line .to{color:var(--gold)}
+/* =======================================================================
+   TEXTE EN DEGRADE (gradient-text)
+   -----------------------------------------------------------------------
+   Le degrade fait 200% de large et c'est sa POSITION qui se deplace, pas
+   ses stops : le navigateur recompose la meme couche a chaque image au
+   lieu de regenerer le degrade. Le dernier stop reboucle sur le premier,
+   sinon la fin du cycle coupe net.
+   ======================================================================= */
+.grad {
+  background-image: linear-gradient(90deg, var(--blue), var(--blue-deep), var(--orange), var(--orange-deep), var(--blue));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: grad-flow 9s linear infinite;
+}
+@keyframes grad-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+/* Halo : une copie floutee posee derriere, en aria-hidden cote HTML pour
+   qu'un lecteur d'ecran ne relise pas le titre deux fois. */
+.grad-glow { position: relative; display: inline-block; }
+.grad-glow::before {
+  content: attr(data-text);
+  position: absolute; inset: 0;
+  background-image: inherit; background-size: inherit;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: blur(26px); opacity: .5;
+  pointer-events: none; z-index: -1;
+}
 
-/* grille perso */
-.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.feat-grid{grid-template-columns:1fr}}
-.feat{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:20px;background:var(--glass);
-  box-shadow:var(--glass-shadow);transition:transform .3s var(--ease),border-color .3s}
-.feat:hover{transform:translateY(-3px);border-color:var(--hairline-strong)}
-.feat-ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;margin-bottom:13px;background:rgba(255,255,255,.06);border:1px solid var(--hairline);color:var(--t1)}
-.feat-ico svg{width:19px;height:19px}
-.feat h3{font-weight:600;font-size:15.5px;margin-bottom:6px}
-.feat p{color:var(--t2);font-size:13px}
+/* =======================================================================
+   BOUTON PERLE (pearl-button)
+   -----------------------------------------------------------------------
+   Le relief ne vient pas d'une ombre portee mais de deux inset-shadows
+   opposees — claire en haut, sombre en bas. C'est ce qui donne la lecture
+   « objet poli » plutot que « rectangle qui flotte ».
+   ======================================================================= */
+.pearl {
+  position: relative; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 24px;
+  border: 0; border-radius: 999px;
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+  cursor: pointer; overflow: hidden;
+  transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+}
+.pearl:active { transform: scale(.98); }
+.pearl:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.pearl > span { position: relative; z-index: 2; }
+/* Anneau interieur : sans cette hairline le bouton a un contour mou et se
+   fond dans le fond. */
+.pearl::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
+  pointer-events: none; z-index: 3;
+}
+/* Balayage : une seule couche qui traverse en translate. Pas de
+   background-position anime, donc pas de repeinture du fond. */
+.pearl::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
+  transform: translateX(0) skewX(-12deg); opacity: 0;
+  transition: transform .7s cubic-bezier(.16,1,.3,1), opacity .7s;
+  pointer-events: none; z-index: 1;
+}
+.pearl:hover::after { transform: translateX(360%) skewX(-12deg); opacity: 1; }
 
-/* etapes */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:760px){.steps{grid-template-columns:1fr}}
-.step{border:1px solid var(--hairline);border-radius:var(--r-sm);padding:26px;background:var(--glass);box-shadow:var(--glass-shadow)}
-.step .num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-weight:700;
-  background:var(--accent-soft);color:var(--accent-2);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);margin-bottom:16px}
-.step h3{font-family:var(--display);font-weight:600;font-size:18px;margin-bottom:8px}
-.step p{color:var(--t2);font-size:14px}
+.pearl-light {
+  background: linear-gradient(180deg, #fff, #e4e4e7); color: #09090b;
+  box-shadow: inset 0 1px 0 0 rgba(255,255,255,.9),
+              inset 0 -2px 4px 0 rgba(0,0,0,.15),
+              0 8px 24px -8px rgba(255,255,255,.3);
+}
+.pearl-dark {
+  background: linear-gradient(180deg, #27272a, #09090b); color: #f4f4f5;
+  box-shadow: inset 0 1px 0 0 rgba(255,255,255,.14),
+              inset 0 -2px 4px 0 rgba(0,0,0,.6),
+              0 8px 24px -10px rgba(0,0,0,.8);
+}
+.pearl-team {
+  color: #fff;
+  background: linear-gradient(120deg, var(--blue-deep) 0%, var(--blue) 35%, var(--orange) 70%, var(--orange-deep) 100%);
+  background-size: 200% 100%; background-position: 0% 50%;
+  box-shadow: inset 0 1px 0 0 rgba(255,255,255,.35),
+              inset 0 -2px 6px 0 rgba(0,0,0,.35),
+              0 10px 30px -10px rgba(90,179,255,.6);
+  transition: background-position .5s, transform .3s, box-shadow .3s;
+}
+.pearl-team:hover { background-position: 100% 50%; }
+.pearl-ghost { background: transparent; color: var(--text-dim); box-shadow: none; }
+.pearl-ghost::before { box-shadow: none; }
+.pearl-ghost:hover { color: var(--text); }
+.pearl-lg { height: 52px; padding: 0 30px; font-size: 15px; }
+.pearl-sm { height: 36px; padding: 0 16px; font-size: 13px; }
 
-/* faq */
-.faq{display:flex;flex-direction:column;gap:10px;max-width:820px}
-.qa{border:1px solid var(--hairline);border-radius:14px;background:var(--glass);overflow:hidden}
-.qa summary{list-style:none;cursor:pointer;padding:18px 20px;font-weight:600;font-size:15.5px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.qa summary::-webkit-details-marker{display:none}
-.qa summary .pm{color:var(--accent-2);font-size:22px;transition:transform .25s var(--ease);flex:0 0 auto}
-.qa[open] summary .pm{transform:rotate(45deg)}
-.qa .a{padding:0 20px 18px;color:var(--t2);font-size:14.5px}
+/* =======================================================================
+   EN-TETE (header-3)
+   -----------------------------------------------------------------------
+   Le fond de verre n'apparait qu'apres un peu de defilement : au sommet,
+   le hero respire seul, sans liseré au-dessus de lui.
+   ======================================================================= */
+.hdr {
+  position: fixed; inset: 0 0 auto 0; z-index: 50; height: 64px;
+  border-bottom: 1px solid transparent;
+  transition: background-color .3s, border-color .3s, backdrop-filter .3s;
+}
+.hdr.is-scrolled {
+  background: rgba(8,9,12,.72);
+  border-bottom-color: var(--line);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.hdr-in { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-disp); font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+.brand .dot { color: var(--orange); }
+.hdr-nav { display: none; gap: 32px; }
+.hdr-nav a { font-size: 14px; color: var(--text-dim); transition: color .15s; }
+.hdr-nav a:hover { color: var(--text); }
+.hdr-cta { display: none; gap: 10px; }
+.hdr-burger {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  background: transparent; border: 0; border-radius: 10px; cursor: pointer; color: var(--text-dim);
+}
+@media (min-width: 900px) {
+  .hdr-nav, .hdr-cta { display: flex; align-items: center; }
+  .hdr-burger { display: none; }
+}
+/* Panneau mobile plein ecran. Un tiroir de 280px ne tiendrait pas les
+   entrees sans scroller ; plein ecran, la liste respire. */
+.hdr-panel {
+  position: fixed; inset: 64px 0 0 0; z-index: 49;
+  background: rgba(8,9,12,.97);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  padding: 24px; opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+}
+.hdr-panel.is-open { opacity: 1; pointer-events: auto; }
+.hdr-panel a {
+  display: block; padding: 14px 16px; border-radius: 10px;
+  font-size: 18px; color: var(--text-dim);
+  transform: translateY(8px); opacity: 0;
+  transition: transform .3s, opacity .3s, background-color .15s;
+}
+.hdr-panel.is-open a { transform: none; opacity: 1; }
+.hdr-panel a:hover { background: rgba(255,255,255,.05); color: var(--text); }
+@media (min-width: 900px) { .hdr-panel { display: none; } }
 
-/* cta download */
-.dl{border:1px solid var(--hairline);border-radius:var(--r);padding:56px 40px;text-align:center;
-  background:linear-gradient(160deg,rgba(10,132,255,.14),rgba(255,255,255,.03));box-shadow:var(--glass-shadow)}
-.dl h2{margin-bottom:14px}
-.dl p{color:var(--t2);max-width:520px;margin:0 auto 30px}
-.dl .hero-meta{margin-top:24px}
+/* =======================================================================
+   HERO (hero-section-9)
+   ======================================================================= */
+.hero { position: relative; padding: 140px 0 0; overflow: hidden; }
+/* Nappes de lumiere. pointer-events:none + contain:strict : elles ne
+   participent ni aux evenements ni au calcul de mise en page du reste. */
+.hero-glow { position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none; contain: strict; }
+@media (max-width: 1023px) { .hero-glow { display: none; } }
+.hero-glow i {
+  position: absolute; left: 0; top: 0; display: block;
+  transform: rotate(-45deg); transform-origin: top left;
+}
+.hero-glow i:nth-child(1) {
+  width: 35rem; height: 80rem; border-radius: 999px;
+  background: radial-gradient(68% 69% at 55% 31%, rgba(90,179,255,.10) 0, rgba(30,127,230,.03) 50%, transparent 80%);
+  translate: 0 -87.5%;
+}
+.hero-glow i:nth-child(2) {
+  width: 14rem; height: 80rem; border-radius: 999px;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255,176,103,.07) 0, rgba(242,106,10,.02) 80%, transparent 100%);
+  translate: 5% -50%;
+}
+.hero-glow i:nth-child(3) {
+  width: 14rem; height: 80rem;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255,255,255,.04) 0, rgba(255,255,255,.02) 80%, transparent 100%);
+  translate: 0 -87.5%;
+}
 
-/* avertissement Windows + empreinte : volontairement discret (verre sourd, pas
-   d'accent colore) — c'est une precision rassurante, pas une alerte. */
-.dl-note{margin:34px auto 0;max-width:620px;padding:20px 24px;text-align:left;
-  border:1px solid var(--hairline);border-radius:var(--r-sm);background:var(--glass)}
-.dl-note h3{font-family:var(--display);font-size:14.5px;font-weight:600;margin-bottom:8px;color:var(--t1)}
-.dl-note p{max-width:none;margin:0;font-size:13.5px;line-height:1.6;color:var(--t2)}
-.dl-note b{color:var(--chrome);font-weight:600}
-.dl-hash{margin-top:14px !important;padding-top:14px;border-top:1px solid var(--hairline);
-  font-size:12px !important;color:var(--t3) !important}
-.dl-note code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11.5px;
-  color:var(--t2);word-break:break-all}
-#dl-sha{display:inline-block;margin-top:6px;letter-spacing:.02em}
+.hero-in { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; text-align: center; }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 14px; margin-bottom: 26px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel); font-size: 12.5px; color: var(--text-mute);
+}
+.pill-dot { position: relative; display: block; width: 6px; height: 6px; }
+.pill-dot::before, .pill-dot::after {
+  content: ''; position: absolute; inset: 0; border-radius: 999px; background: var(--blue);
+}
+.pill-dot::before { animation: ping 2s cubic-bezier(0,0,.2,1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
 
-/* footer */
-footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
-.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.foot .logo{font-size:17px}
-.foot-links{display:flex;gap:24px;font-size:14px;color:var(--t2);flex-wrap:wrap}
-.foot-links a:hover{color:var(--t1)}
-.foot-note{margin-top:20px;font-size:12.5px;color:var(--t3)}
+.hero h1 { font-size: clamp(38px, 7vw, 76px); line-height: 1.03; }
+.hero-sub { margin: 28px auto 0; max-width: 620px; font-size: clamp(16px, 2vw, 20px); color: var(--text-dim); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
+.hero-fine { margin-top: 20px; font-size: 12px; color: var(--text-faint); }
 
-/* reveal */
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
-.reveal.in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.badge .pulse{animation:none}}
+/* -- Capture en perspective ---------------------------------------------
+   Les deux masques de degrade evitent de decouper l'image : elle se fond
+   dans le fond au lieu de s'arreter sur une arete nette. */
+.hero-shot { max-width: 1400px; margin: -40px auto 0; -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%); mask-image: linear-gradient(to bottom, #000 50%, transparent 100%); }
+.hero-shot-persp { perspective: 1200px; padding-left: 4rem; margin-right: -4rem; -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 100%); mask-image: linear-gradient(to right, #000 55%, transparent 100%); }
+.hero-shot-tilt { transform: rotateX(20deg); }
+.hero-shot-skew { transform: skewX(.36rad); }
+@media (max-width: 900px) {
+  .hero-shot-persp { padding-left: 0; margin-right: 0; -webkit-mask-image: none; mask-image: none; }
+  .hero-shot-tilt, .hero-shot-skew { transform: none; }
+}
+
+.appframe {
+  position: relative; border: 1px solid var(--line-hi); border-radius: var(--radius);
+  background: #08090c; overflow: hidden;
+  box-shadow: 0 40px 120px -20px rgba(0,0,0,.9);
+}
+.appframe-bar {
+  display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px;
+  border-bottom: 1px solid var(--line); background: rgba(255,255,255,.025);
+  font-size: 12px; color: var(--text-mute);
+}
+.appframe-ctl { margin-left: auto; display: flex; align-items: center; gap: 12px; color: var(--text-faint); }
+.appframe-body { display: grid; grid-template-columns: 210px 1fr; aspect-ratio: 16/9; }
+.appframe-nav { border-right: 1px solid var(--line); padding: 12px; }
+.appframe-row { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+.appframe-row b { display: block; width: 14px; height: 14px; border-radius: 4px; background: rgba(255,255,255,.07); }
+.appframe-row i { display: block; height: 9px; border-radius: 4px; background: rgba(255,255,255,.05); }
+.appframe-main { display: grid; grid-template-rows: auto 1fr; gap: 12px; padding: 16px; }
+.appframe-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.appframe-kpis > div, .appframe-chart {
+  border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02);
+}
+.appframe-kpis > div { height: 62px; }
+
+/* -- Bandeau d'integrations --------------------------------------------- */
+.logos { padding: 72px 0; }
+.logos h2 { font-size: 14px; font-weight: 500; text-align: center; color: var(--text-mute); font-family: var(--font-sans); letter-spacing: 0; }
+.logos-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 20px 48px; max-width: 900px; margin: 44px auto 0;
+}
+.logos-row span {
+  font-family: var(--font-disp); font-size: 18px; font-weight: 600;
+  color: var(--text-faint); transition: color .2s;
+}
+.logos-row span:hover { color: var(--text-dim); }
+
+/* =======================================================================
+   JOUER A DISTANCE (#lan)
+   -----------------------------------------------------------------------
+   Le schema montre le mecanisme : deux joueurs sur des reseaux differents,
+   relies par le tunnel de Vault, aboutissent dans la meme partie privee.
+   C'est la chose la moins evidente que l'app fasse, donc la seule qui
+   merite un dessin plutot qu'un paragraphe.
+   ======================================================================= */
+.lan-diagram {
+  display: grid; gap: 14px; align-items: center;
+  grid-template-columns: 1fr;
+  padding: 28px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: radial-gradient(70% 60% at 50% 0%, rgba(30,127,230,.10), transparent 70%), var(--bg-soft);
+}
+@media (min-width: 760px) { .lan-diagram { grid-template-columns: 1fr auto 1fr; gap: 24px; } }
+
+.lan-node { text-align: center; }
+.lan-avatar {
+  width: 52px; height: 52px; margin: 0 auto 12px;
+  border-radius: 999px; display: grid; place-items: center;
+  border: 1px solid var(--line-hi);
+  background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+}
+.lan-node b { display: block; font-size: 14px; font-weight: 600; }
+.lan-node span { display: block; margin-top: 3px; font-size: 12px; color: var(--text-mute); }
+
+/* Le lien : un trait qui traverse, avec une pastille qui glisse dessus.
+   L'animation est en transform pur et s'arrete sous prefers-reduced-motion
+   (regle globale plus bas). */
+.lan-link { position: relative; height: 44px; min-width: 140px; display: grid; place-items: center; }
+.lan-link-line {
+  position: absolute; left: 0; right: 0; top: 50%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--orange), transparent);
+  opacity: .55;
+}
+.lan-link-dot {
+  position: absolute; top: 50%; left: 0; width: 7px; height: 7px; margin-top: -3.5px;
+  border-radius: 999px; background: #fff;
+  box-shadow: 0 0 10px 2px rgba(90,179,255,.8);
+  animation: lan-travel 3.2s ease-in-out infinite;
+}
+@keyframes lan-travel {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(calc(100% + 130px)); }
+}
+.lan-link-tag {
+  position: relative; z-index: 1;
+  padding: 4px 12px; border-radius: 999px;
+  border: 1px solid var(--line-hi); background: var(--bg);
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+}
+
+.lan-points { display: grid; gap: 12px; margin-top: 32px; }
+@media (min-width: 760px) { .lan-points { grid-template-columns: repeat(3, 1fr); } }
+.lan-point {
+  padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel);
+}
+.lan-point b { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600; }
+.lan-point span { font-size: 13px; color: var(--text-mute); }
+
+/* =======================================================================
+   FAQ (#faq)
+   -----------------------------------------------------------------------
+   Les elements details/summary natifs : ouverture au clavier, etat expose aux
+   lecteurs d'ecran et fonctionnement sans JavaScript, gratuitement. Un
+   accordeon fait main aurait demande tout ca a la main pour le meme rendu.
+   ======================================================================= */
+.faq-list { display: grid; gap: 10px; max-width: 780px; margin: 0 auto; }
+.faq-item {
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); overflow: hidden;
+  transition: border-color .2s;
+}
+.faq-item[open] { border-color: var(--line-hi); }
+.faq-item summary {
+  display: flex; align-items: center; gap: 14px;
+  padding: 17px 20px; cursor: pointer;
+  font-size: 15px; font-weight: 500;
+  list-style: none;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary:hover { color: #fff; }
+.faq-item summary:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.faq-chevron {
+  margin-left: auto; flex-shrink: 0; color: var(--text-faint);
+  transition: transform .25s cubic-bezier(.16,1,.3,1);
+}
+.faq-item[open] .faq-chevron { transform: rotate(180deg); }
+.faq-answer { padding: 0 20px 18px; font-size: 14px; color: var(--text-mute); max-width: 68ch; }
+
+/* =======================================================================
+   SECTIONS
+   ======================================================================= */
+.sec { padding: 100px 0; }
+.sec-head { max-width: 660px; margin: 0 auto 56px; text-align: center; }
+.sec-eyebrow {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 12px; font-size: 11.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .16em; color: var(--text-mute);
+}
+.sec-head h2 { font-size: clamp(28px, 4.2vw, 46px); line-height: 1.1; }
+.sec-head p { margin-top: 16px; color: var(--text-dim); }
+
+/* =======================================================================
+   BENTO GRID + SPOTLIGHT CARD
+   -----------------------------------------------------------------------
+   Le survol met a jour deux variables CSS (--sx, --sy) posees sur la
+   carte ; deux couches en position absolue les lisent. Rien n'est
+   re-calcule cote mise en page — le navigateur ne compose que deux
+   degrades radiaux.
+
+   Sous 900px la grille retombe en une colonne : un bento a trois colonnes
+   sur telephone n'est plus un bento, c'est une liste illisible.
+   ======================================================================= */
+.bento { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 900px) {
+  .bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 20rem; }
+  .b-2col { grid-column: span 2; }
+  .b-2row { grid-row: span 2; }
+}
+
+.card {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 19rem; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-soft);
+  box-shadow: inset 0 -20px 80px -20px rgba(255,255,255,.06);
+  transition: border-color .3s;
+}
+.card:hover { border-color: var(--line-hi); }
+/* Halo de fond, tres diffus. */
+.card::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; opacity: 0;
+  background: radial-gradient(420px circle at var(--sx, 50%) var(--sy, 50%), rgba(90,179,255,.14), transparent 65%);
+  transition: opacity .3s; pointer-events: none;
+}
+/* Halo de BORDURE : le masque ne laisse voir le degrade que sur l'anneau
+   d'un pixel. C'est ce liseré qui donne l'impression que la lumiere vient
+   de derriere la carte. */
+.card::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; opacity: 0;
+  border-radius: inherit; padding: 1px;
+  background: radial-gradient(420px circle at var(--sx, 50%) var(--sy, 50%), rgba(255,255,255,.5), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  transition: opacity .3s; pointer-events: none;
+}
+.card:hover::before, .card:hover::after { opacity: 1; }
+
+.card-bg {
+  position: absolute; inset: 0; z-index: 0;
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+          mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+}
+.card-body {
+  position: relative; z-index: 2; padding: 24px;
+  transform: translateY(0); transition: transform .3s cubic-bezier(.16,1,.3,1);
+}
+.card:hover .card-body { transform: translateY(-38px); }
+/* display:block est indispensable : .card-icon est un <span>, et un element
+   inline ignore width et height. Sans lui l'icone n'a aucune boite a remplir
+   et s'etale sur toute la carte. */
+.card-icon { display: block; width: 34px; height: 34px; color: var(--text-dim); transform-origin: left center; transition: transform .3s; }
+.card-icon svg { display: block; width: 100%; height: 100%; }
+.card:hover .card-icon { transform: scale(.8); }
+.card-body h3 { margin: 12px 0 6px; font-size: 19px; }
+.card-body p { font-size: 13.5px; color: var(--text-mute); max-width: 46ch; }
+.card-cta {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 16px 20px;
+  transform: translateY(36px); opacity: 0;
+  transition: transform .3s cubic-bezier(.16,1,.3,1), opacity .3s;
+}
+.card:hover .card-cta { transform: none; opacity: 1; }
+.card-cta a {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--text-dim);
+  transition: color .15s;
+}
+.card-cta a:hover { color: var(--text); }
+
+/* =======================================================================
+   PARALLAXE (parallax-scrolling)
+   -----------------------------------------------------------------------
+   Chaque couche est translatee d'une fraction de la distance parcourue par
+   la page. speed < 1 : la couche recule. speed > 1 : elle avance.
+   Uniquement du translate3d, jamais de top ni de background-position.
+   ======================================================================= */
+.plx {
+  position: relative; height: min(88vh, 720px); overflow: hidden;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: #06070a;
+}
+.plx-layer { position: absolute; inset: -12% 0; will-change: transform; }
+.plx-1 { background: radial-gradient(60% 50% at 20% 20%, rgba(30,127,230,.22), transparent 70%), radial-gradient(50% 40% at 85% 70%, rgba(242,106,10,.16), transparent 70%); }
+.plx-3 { display: grid; place-items: center; padding: 0 24px; text-align: center; }
+.plx-3 h2 { font-size: clamp(28px, 4.4vw, 48px); line-height: 1.1; max-width: 720px; }
+.plx-3 p { margin: 20px auto 0; max-width: 560px; color: var(--text-dim); }
+.plx-star { position: absolute; border-radius: 999px; background: #fff; }
+
+/* =======================================================================
+   BARRE LATERALE (sidebar-component)
+   -----------------------------------------------------------------------
+   Repliee, la barre n'enleve PAS les libelles du DOM : ils sont reduits en
+   largeur, ce qui les garde lisibles par les lecteurs d'ecran et evite un
+   reflow de toute la liste a chaque bascule.
+   ======================================================================= */
+.split { display: grid; gap: 48px; align-items: center; }
+@media (min-width: 1000px) { .split { grid-template-columns: 1fr 1fr; gap: 64px; } }
+
+.sb {
+  display: flex; flex-direction: column; height: 460px; width: 264px;
+  border: 1px solid var(--line); border-right-width: 1px; border-radius: var(--radius);
+  background: rgba(255,255,255,.015);
+  transition: width .3s cubic-bezier(.16,1,.3,1);
+  overflow: hidden;
+}
+.sb.is-collapsed { width: 68px; }
+.sb-head { display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 14px; flex-shrink: 0; }
+.sb-toggle {
+  margin-left: auto; display: grid; place-items: center; width: 30px; height: 30px;
+  background: transparent; border: 0; border-radius: 8px; cursor: pointer; color: var(--text-faint);
+  transition: background-color .15s, color .15s; flex-shrink: 0;
+}
+.sb-toggle:hover { background: rgba(255,255,255,.06); color: var(--text-dim); }
+.sb-toggle svg { transition: transform .3s; }
+.sb:not(.is-collapsed) .sb-toggle svg { transform: rotate(180deg); }
+.sb-search { padding: 0 12px 12px; flex-shrink: 0; }
+.sb.is-collapsed .sb-search { display: none; }
+.sb-search-in { position: relative; }
+.sb-search-in svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
+.sb-search input {
+  width: 100%; height: 36px; padding: 0 12px 0 34px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: rgba(255,255,255,.03); color: var(--text);
+  font: inherit; font-size: 13.5px;
+  transition: border-color .15s, background-color .15s;
+}
+.sb-search input::placeholder { color: var(--text-faint); }
+.sb-search input:focus { outline: none; border-color: var(--line-hi); background: rgba(255,255,255,.05); }
+.sb-list { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 8px 8px; scrollbar-width: thin; }
+.sb-group { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); padding: 12px 12px 4px; }
+.sb.is-collapsed .sb-group { display: none; }
+.sb-item {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  height: 36px; padding: 0 12px; margin-bottom: 2px; border-radius: 9px;
+  font-size: 13.5px; color: var(--text-mute); cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.sb.is-collapsed .sb-item { justify-content: center; padding: 0; }
+.sb-item:hover { background: rgba(255,255,255,.035); color: var(--text-dim); }
+.sb-item.is-active { background: rgba(255,255,255,.06); color: var(--text); }
+/* Liseré d'etat actif. Une barre de 2px suffit a lire la selection dans une
+   liste longue ; un fond plein par entree ferait une colonne de blocs. */
+.sb-item::before {
+  content: ''; position: absolute; left: 0; top: 50%; width: 2px; height: 16px;
+  transform: translateY(-50%); border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, var(--blue), var(--orange));
+  opacity: 0; transition: opacity .2s;
+}
+.sb-item.is-active::before { opacity: 1; }
+.sb-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sb-item span {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: opacity .2s, max-width .2s;
+  max-width: 160px;
+}
+.sb.is-collapsed .sb-item span { max-width: 0; opacity: 0; }
+.sb-badge {
+  margin-left: auto; padding: 1px 7px; border-radius: 999px;
+  background: rgba(255,255,255,.08); font-size: 10px; font-variant-numeric: tabular-nums; color: var(--text-mute);
+}
+.sb.is-collapsed .sb-badge { display: none; }
+.sb-foot { flex-shrink: 0; border-top: 1px solid var(--line); padding: 12px; display: flex; align-items: center; gap: 10px; }
+.sb-avatar { width: 28px; height: 28px; border-radius: 999px; background: linear-gradient(135deg, var(--blue), var(--orange)); flex-shrink: 0; }
+.sb-foot div { min-width: 0; }
+.sb-foot b { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); }
+.sb-foot i { display: block; font-style: normal; font-size: 10.5px; color: var(--text-faint); }
+.sb.is-collapsed .sb-foot div { display: none; }
+
+/* =======================================================================
+   PILE DE CARTES (card-stack)
+   -----------------------------------------------------------------------
+   Ce que la pile fait mieux qu'un carrousel qui glisse : elle montre
+   combien il reste. Trois cartes decalees derriere, c'est trois choses
+   encore a voir.
+   ======================================================================= */
+.stack { position: relative; height: 400px; }
+.stack-card {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 32px; border: 1px solid var(--line); border-radius: 18px;
+  background: rgba(13,15,20,.9);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 -20px 80px -20px rgba(255,255,255,.1), 0 24px 60px -24px rgba(0,0,0,.9);
+  transform-origin: top center; will-change: transform;
+  transition: transform .5s cubic-bezier(.16,1,.3,1), opacity .4s;
+}
+.stack-card h3 { font-size: 21px; }
+.stack-card p { margin-top: 12px; font-size: 14px; color: var(--text-mute); }
+.stack-card svg { width: 30px; height: 30px; }
+.stack-dots { position: absolute; left: 0; bottom: -30px; display: flex; gap: 8px; }
+.stack-dots button {
+  height: 6px; width: 6px; padding: 0; border: 0; border-radius: 999px;
+  background: rgba(255,255,255,.25); cursor: pointer;
+  transition: width .3s, background-color .3s;
+}
+.stack-dots button.is-active { width: 24px; background: linear-gradient(90deg, var(--blue), var(--orange)); }
+
+/* =======================================================================
+   TELECHARGEMENT
+   ======================================================================= */
+.dl { max-width: 720px; margin: 0 auto; padding: 56px 40px; text-align: center; }
+.dl h2 { font-size: clamp(26px, 3.6vw, 38px); }
+.dl p { margin: 16px auto 0; max-width: 460px; color: var(--text-dim); }
+.dl-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
+.dl-fine { margin-top: 24px; font-size: 12px; color: var(--text-faint); }
+
+/* =======================================================================
+   PIED DE PAGE ANIME (motion-footer)
+   -----------------------------------------------------------------------
+   Les reveals n'animent que transform et opacity, donc rien a recalculer
+   entre deux images. Les aurores derivent en transform via une animation
+   CSS : elles ne coutent rien au thread principal.
+   ======================================================================= */
+.ftr { position: relative; isolation: isolate; overflow: hidden; border-top: 1px solid var(--line); background: #06070a; }
+.ftr-aurora { position: absolute; inset: 0; z-index: -1; opacity: .55; pointer-events: none; }
+.ftr-aurora i {
+  position: absolute; display: block; border-radius: 999px; filter: blur(70px);
+  animation: aurora 20s ease-in-out infinite;
+}
+.ftr-aurora i:nth-child(1) {
+  top: -45%; left: 8%; width: 40rem; height: 40rem;
+  background: radial-gradient(circle, rgba(30,127,230,.3) 0%, transparent 65%);
+}
+.ftr-aurora i:nth-child(2) {
+  bottom: -35%; right: 4%; width: 36rem; height: 36rem;
+  background: radial-gradient(circle, rgba(242,106,10,.24) 0%, transparent 65%);
+  animation-delay: -10s;
+}
+@keyframes aurora {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(4%, -6%, 0) scale(1.15); }
+}
+
+.ftr-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; padding: 64px 0; border-bottom: 1px solid var(--line); }
+.ftr-cta h3 { font-size: clamp(22px, 3vw, 30px); }
+.ftr-cta p { margin-top: 8px; font-size: 14px; color: var(--text-dim); }
+.magnetic {
+  padding: 13px 26px; border: 0; border-radius: 999px;
+  background: #fff; color: #09090b; font-size: 14px; font-weight: 600; cursor: pointer;
+  will-change: transform; transition: background-color .2s;
+}
+.magnetic:hover { background: #e4e4e7; }
+
+.ftr-cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px 24px; padding: 64px 0; }
+@media (min-width: 800px) { .ftr-cols { grid-template-columns: repeat(4, 1fr); } }
+.ftr-cols h4 { margin: 0 0 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--text-mute); }
+.ftr-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ftr-cols a { font-size: 14px; color: var(--text-mute); transition: color .15s; }
+.ftr-cols a:hover { color: var(--text); }
+
+.ftr-mark { text-align: center; padding-bottom: 20px; user-select: none; will-change: transform; }
+.ftr-mark span {
+  display: block; font-family: var(--font-disp); font-weight: 700;
+  font-size: 18vw; line-height: .8; letter-spacing: -.05em;
+  background: linear-gradient(180deg, rgba(255,255,255,.14), transparent);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.ftr-legal {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 22px 0; border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-faint);
+}
+.ftr-social { display: flex; gap: 4px; }
+.ftr-social a { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--text-mute); transition: background-color .15s, color .15s; }
+.ftr-social a:hover { background: rgba(255,255,255,.06); color: var(--text); }
+
+/* -- Reveal au defilement ----------------------------------------------- */
+.reveal { opacity: 0; transform: translateY(32px); }
+.reveal.is-in { opacity: 1; transform: none; transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+
+/* =======================================================================
+   MOUVEMENT REDUIT
+   -----------------------------------------------------------------------
+   Le parallaxe et la pile qui tourne toute seule sont exactement ce que ce
+   reglage vise. Le JS le lit AUSSI (voir REDUCED plus bas) : couper les
+   transitions CSS ne suffit pas a arreter une boucle de scroll.
+   ======================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .plx-layer { transform: none !important; }
+}
 </style>
 </head>
-<body id="top">
-<div class="grid-fx"></div>
+<body>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a href="#top" class="logo"><img class="logo-mark" src="vault-logo.png" alt="Vault" width="34" height="34"><b>Vault<span class="dot">.</span></b></a>
-    <div class="nav-links" id="navlinks">
+<!-- Le monogramme Vault, defini une fois et reference par <use>. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="v-gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5AB3FF"/><stop offset="1" stop-color="#1E7FE6"/></linearGradient>
+    <linearGradient id="v-gOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB067"/><stop offset="1" stop-color="#F26A0A"/></linearGradient>
+    <linearGradient id="v-gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A2233"/><stop offset="1" stop-color="#080B12"/></linearGradient>
+    <clipPath id="v-halfL"><rect x="0" y="0" width="256" height="512"/></clipPath>
+    <clipPath id="v-halfR"><rect x="256" y="0" width="256" height="512"/></clipPath>
+    <symbol id="vault-mark" viewBox="0 0 512 512">
+      <rect x="24" y="24" width="464" height="464" rx="116" fill="url(#v-gGlass)"/>
+      <rect x="24" y="24" width="464" height="464" rx="116" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+      <rect x="42" y="40" width="428" height="200" rx="100" fill="rgba(255,255,255,.07)"/>
+      <path id="v-vpath" d="M150 150 L214 150 L256 296 L298 150 L362 150 L286 398 L226 398 Z"/>
+      <use href="#v-vpath" fill="url(#v-gBlue)" clip-path="url(#v-halfL)"/>
+      <use href="#v-vpath" fill="url(#v-gOrange)" clip-path="url(#v-halfR)"/>
+      <path d="M256 296 L256 398" stroke="rgba(255,255,255,.22)" stroke-width="3"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ═══ EN-TETE ═════════════════════════════════════════════════════════ -->
+<header class="hdr" id="hdr">
+  <div class="wrap hdr-in">
+    <a class="brand" href="#top" aria-label="Vault — accueil">
+      <svg width="22" height="22" viewBox="0 0 512 512" aria-hidden="true"><use href="#vault-mark"/></svg>
+      <span>Vault<i class="dot">.</i></span>
+    </a>
+
+    <nav class="hdr-nav">
       <a href="#lan">Jouer à distance</a>
-      <a href="#modules">Modules</a>
-      <a href="#features">Personnalisation</a>
-      <a href="#how">Comment ça marche</a>
+      <a href="#features">Modules</a>
+      <a href="#overlays">Overlays</a>
+      <a href="/tiktok">Patch TikTok</a>
       <a href="#faq">FAQ</a>
-      <a class="nav-cta" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">Télécharger</a>
-    </div>
-    <button class="nav-burger" id="burger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  </div>
-</nav>
+    </nav>
 
-<!-- HERO -->
-<header class="hero wrap">
-  <span class="badge reveal"><span class="pulse"></span> Nouveau · Jouer à distance en LAN virtuel</span>
-  <h1 class="reveal">Tout ton Rocket League,<br><span class="b">dans une seule fenêtre.</span></h1>
-  <p class="sub reveal">Stats en direct, overlays en jeu, coaching, Discord Rich Presence, personnalisation locale — et maintenant des parties privées avec tes amis, même à l'autre bout du pays. Gratuit, un seul <b>.exe</b>, rien à installer.</p>
-  <div class="hero-cta reveal">
-    <a class="btn btn-primary" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-      Télécharger Vault
-    </a>
-    <a class="btn btn-ghost" href="https://discord.gg/w6pkd4WzJa">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19 19 0 0 0 15.6 3l-.24.5a17.5 17.5 0 0 1 4.2 1.3 15.6 15.6 0 0 0-15.1 0A17.4 17.4 0 0 1 8.7 3.5L8.4 3a19 19 0 0 0-4.7 1.4C1 8.9.2 13.3.5 17.6a19.3 19.3 0 0 0 5.8 2.9l.5-1.1a12.6 12.6 0 0 1-2-1l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12.6 12.6 0 0 1-2 1l.5 1.1a19.2 19.2 0 0 0 5.8-2.9c.4-5-.9-9.4-3.9-13.2ZM8.4 15c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9Zm7.2 0c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9Z"/></svg>
-      Rejoindre le Discord
-    </a>
-  </div>
-  <div class="hero-meta reveal">
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 100 % gratuit</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Sans installation</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg> Windows</span>
-  </div>
-
-  <!-- apercu lobby -->
-  <div class="preview reveal">
-    <div class="preview-card">
-      <div class="preview-top">
-        <span class="d"></span><span class="d"></span><span class="d"></span>
-        <span class="tt">Vault — Remote Play · Lobby</span>
-      </div>
-      <div class="preview-body">
-        <div class="pl me">
-          <div class="pl-av">T</div>
-          <div class="pl-main"><div class="pl-name">Toi <span class="pl-badge">Hôte</span></div><div class="pl-ip">10.71.0.1</div></div>
-          <span class="pl-dot"></span>
-        </div>
-        <div class="pl">
-          <div class="pl-av g2">M</div>
-          <div class="pl-main"><div class="pl-name">Mxsquee</div><div class="pl-ip">10.71.0.148</div></div>
-          <span class="pl-dot"></span>
-        </div>
-        <div class="pl">
-          <div class="pl-av g3">E</div>
-          <div class="pl-main"><div class="pl-name">Esquie</div><div class="pl-ip">10.71.0.72</div></div>
-          <span class="pl-dot"></span>
-        </div>
-        <div class="pl">
-          <div class="pl-av" style="background:linear-gradient(135deg,var(--gold),#b8860b)">R</div>
-          <div class="pl-main"><div class="pl-name">Rainbow Road 64 <span class="pl-badge me">carte</span></div><div class="pl-ip">partagée · 7 Mo</div></div>
-          <span class="pl-dot"></span>
-        </div>
-      </div>
+    <div class="hdr-cta">
+      <a class="pearl pearl-ghost pearl-sm" href="https://discord.gg/w6pkd4WzJa" target="_blank" rel="noopener"><span>Discord</span></a>
+      <a class="pearl pearl-light pearl-sm" href="#download"><span>Télécharger</span></a>
     </div>
+
+    <button class="hdr-burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="hdr-panel">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
   </div>
 </header>
 
-<!-- LAN -->
-<section class="sec wrap" id="lan">
-  <p class="eyebrow reveal">La nouveauté</p>
-  <h2 class="reveal">Joue avec tes amis, où qu'ils soient</h2>
-  <p class="lead reveal">Pas besoin d'être sur le même réseau. Vault reproduit un vrai LAN, en perçant les connexions tout seul.</p>
-  <div class="spot reveal">
-    <div class="spot-grid">
-      <div class="spot-l">
-        <span class="tag">Remote Play · LAN virtuel</span>
-        <h3>Un vrai LAN, sans câble et sans logiciel tiers</h3>
-        <p>Vault monte une carte réseau virtuelle et traverse les NAT en pair-à-pair. Rocket League croit que vous êtes tous dans la même pièce : « Local Match » fonctionne comme un LAN classique, à n'importe quelle distance.</p>
-        <ul class="spot-steps">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Installation du réseau une seule fois — une autorisation Windows, puis plus jamais.</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Un lobby qui se remplit tout seul : chaque joueur avec son adresse Vault.</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Partage tes cartes Workshop en un clic — l'ami les reçoit et vous jouez dessus.</li>
-        </ul>
+<div class="hdr-panel" id="hdr-panel">
+  <a href="#lan">Jouer à distance</a>
+  <a href="#features">Modules</a>
+  <a href="#overlays">Overlays</a>
+  <a href="/tiktok">Patch TikTok</a>
+  <a href="#faq">FAQ</a>
+  <a href="#download">Télécharger</a>
+</div>
+
+<main id="top">
+
+<!-- ═══ HERO ════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-glow" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="wrap">
+    <div class="hero-in">
+      <p class="pill"><span class="pill-dot"></span> Compatible BakkesMod — aucune modification du jeu</p>
+      <h1 class="balance">
+        Tout ton Rocket League,<br>
+        <span class="grad grad-glow" data-text="dans une seule fenêtre">dans une seule fenêtre</span>
+      </h1>
+      <p class="hero-sub">
+        Stats en direct, overlays en jeu, personnalisation locale, cartes Workshop,
+        sauvegarde des replays — et des parties privées avec tes amis, même à l'autre
+        bout du pays.
+      </p>
+      <div class="hero-actions">
+        <a class="pearl pearl-team pearl-lg" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe"><span>Télécharger Vault</span></a>
+        <a class="pearl pearl-dark pearl-lg" href="#features"><span>Voir les modules</span></a>
       </div>
-      <div class="spot-r">
-        <div class="net">
-          <div class="net-card">
-            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-            <div class="net-tx"><b>Toi — Hôte</b><span>10.71.0.1</span></div>
-          </div>
-          <div class="net-line"></div>
-          <div class="net-card">
-            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg></div>
-            <div class="net-tx"><b>Perçage NAT + relais</b><span>pair-à-pair chiffré</span></div>
-          </div>
-          <div class="net-line"></div>
-          <div class="net-card">
-            <div class="net-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M16 3.1a4 4 0 0 1 0 7.8M21 21a6 6 0 0 0-4-5.6"/></svg></div>
-            <div class="net-tx"><b>Tes amis</b><span>même partie, à distance</span></div>
+      <p class="hero-fine">Windows 10/11 · gratuit · sans compte obligatoire</p>
+    </div>
+  </div>
+
+  <div class="hero-shot">
+    <div class="hero-shot-persp">
+      <div class="hero-shot-tilt">
+        <div class="hero-shot-skew">
+          <!-- Faux chrome de fenetre : Vault est une app de bureau, la montrer
+               dans un cadre de navigateur mentirait sur ce qu'on telecharge.
+               La barre de titre reproduite ici n'a PAS de compteur FPS — il a
+               ete retire de l'app, la vitrine ne doit pas montrer une
+               interface qui n'existe plus. -->
+          <div class="appframe">
+            <div class="appframe-bar">
+              <svg width="16" height="16" viewBox="0 0 512 512" aria-hidden="true"><use href="#vault-mark"/></svg>
+              Vault
+              <span class="appframe-ctl" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 10 1" fill="currentColor"><rect width="10" height="1"/></svg>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"><rect x=".5" y=".5" width="9" height="9"/></svg>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+              </span>
+            </div>
+            <div class="appframe-body">
+              <div class="appframe-nav" id="shot-nav"></div>
+              <div class="appframe-main">
+                <div class="appframe-kpis"><div></div><div></div><div></div><div></div></div>
+                <div class="appframe-chart"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -368,204 +861,802 @@ footer{border-top:1px solid var(--hairline);margin-top:80px;padding:44px 0 60px}
   </div>
 </section>
 
-<!-- MODULES -->
-<section class="sec wrap" id="modules">
-  <p class="eyebrow reveal">Les modules</p>
-  <h2 class="reveal">Neuf modules, une seule fenêtre</h2>
-  <p class="lead reveal">Vault ne se contente pas de personnaliser ton jeu : il le suit, l'affiche, t'aide à progresser — et te connecte à tes amis.</p>
-  <div class="bento">
-    <div class="bt wide reveal">
-      <span class="tag">En direct</span>
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
-      <h3>Dashboard en direct</h3>
-      <p>Score, buts, passes, arrêts, possession et probabilité de victoire, mis à jour pendant que tu joues. Ta session est compilée match après match, par mode.</p>
-      <div class="bt-demo">
-        <div class="bt-line"><span class="k">Match en cours</span><span class="v tnum"><b class="tb">3</b> — <b class="to">1</b></span></div>
-        <div class="bt-line"><span class="k">Chances de victoire</span><span class="v tnum">68 %</span></div>
-      </div>
-    </div>
-    <div class="bt third reveal">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="13" y="7" width="3" height="11"/></svg></div>
-      <h3>Stats Tracker.gg</h3>
-      <p>Ton profil et celui de tes adversaires, récupérés automatiquement sur Steam comme sur Epic.</p>
-    </div>
-    <div class="bt half reveal">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2.5"/><path d="M8 21h8M12 18v3"/></svg></div>
-      <h3>Overlays en jeu</h3>
-      <p>Broadcast façon RLCS, rank, boost, scoreboard, manette et clavier-souris, affichés par-dessus Rocket League et positionnables au pixel près. Rien à alt-tabber.</p>
-    </div>
-    <div class="bt half reveal">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="2.4"/></svg></div>
-      <h3>Tableau tactique</h3>
-      <p>Trace tes coups, tes rotations et tes kickoffs sur un terrain à l'échelle : courbes lissées, zoom, annulation. Pour coacher ou revoir une action.</p>
-    </div>
-    <div class="bt wide reveal">
-      <span class="tag">Nouveau</span>
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg></div>
-      <h3>Jouer à distance — LAN virtuel</h3>
-      <p>Partie privée avec tes amis même hors du même réseau. Carte réseau virtuelle, perçage de NAT automatique, partage des cartes Workshop et lobby en direct.</p>
-      <div class="bt-demo">
-        <div class="bt-line"><span class="k">Ta session</span><span class="v tnum">Hôte · 10.71.0.1</span></div>
-        <div class="bt-line"><span class="k">Lobby</span><span class="v tnum">3 joueurs · LAN actif</span></div>
-      </div>
-    </div>
-    <div class="bt third reveal">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3h7l4.5 6-8 12-8-12 4.5-6Z"/><path d="M3.6 9h16.8"/></svg></div>
-      <h3>Discord Rich Presence</h3>
-      <p>Ton profil Discord affiche ton score en direct, l'arène, le mode, ta série et la couleur de ton équipe, avec un compte à rebours réel.</p>
-    </div>
-    <div class="bt third reveal">
-      <div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3.6 9h16.8M3.6 15h16.8"/></svg></div>
-      <h3>Objets personnalisés</h3>
-      <p>Balles, boosts et décals maison injectés directement dans le jeu, sans logiciel tiers.</p>
-    </div>
-    <div class="bt third reveal"><div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 9 5 3-5 3z"/></svg></div><h3>Replays</h3><p>Retrouve tes parties, relis-les et partage-les, sans fouiller dans les dossiers du jeu.</p></div>
-    <div class="bt third reveal"><div class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div><h3>Maps Workshop</h3><p>Parcours le catalogue, charge une map en un clic, puis envoie-la à toute ta session.</p></div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="sec wrap" id="features">
-  <p class="eyebrow reveal">Personnalisation locale</p>
-  <h2 class="reveal">Et toute la personnalisation, chez toi</h2>
-  <p class="lead reveal">Chaque option s'applique uniquement sur ton écran. Personne d'autre ne voit tes modifications — c'est cosmétique et local.</p>
-  <div class="feat-grid">
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3>Pseudo en jeu</h3><p>Affiche le pseudo de ton choix, sans jamais toucher à ton compte Epic.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5M3 8v8l9 5 9-5V8"/></svg></div><h3>Objets &amp; Titres</h3><p>Choisis et affiche les objets et titres que tu veux, côté client.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0Z"/><path d="M9 20h6M12 15v5"/></svg></div><h3>Rank &amp; MMR</h3><p>Modifie le rang et le MMR affichés, du Bronze au Supersonic Legend.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Faux amis</h3><p>Ajoute de faux amis à ta liste, visibles uniquement chez toi.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div><h3>Maps custom</h3><p>Charge une map Workshop en un clic et lance-toi directement dessus.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>Fond du menu</h3><p>Remplace l'arène du menu par la map de ton choix — reposée après chaque mise à jour du jeu.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Sons custom</h3><p>Tes propres sons déclenchés par les événements du match.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></div><h3>Presets</h3><p>Sauvegarde tes configs d'objets et de titres, recharge-les instantanément.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H4z"/><path d="M8 20h8M12 16v4"/><path d="m8 11 2.5-3 2 2.5L15 7l3 4"/></svg></div><h3>Écran de chargement</h3><p>Ton image pendant les chargements — ou une différente au hasard sur chaque carte.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v5H3z"/><path d="M3 17h18"/></svg></div><h3>Bandeau RL</h3><p>Ton message défile en bas de l'écran, dans le jeu.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></div><h3>Chat rapide</h3><p>Remplace les messages du quick chat par les tiens.</p></div>
-    <div class="feat reveal"><div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><circle cx="12" cy="14" r="4"/></svg></div><h3>Décals, balles & boosts</h3><p>Tes images sur la carrosserie, tes balles et tes compteurs de boost, injectés dans le jeu.</p></div>
-  </div>
-</section>
-
-<!-- HOW -->
-<section class="sec wrap" id="how">
-  <p class="eyebrow reveal">Comment ça marche</p>
-  <h2 class="reveal">Prêt en trois étapes</h2>
-  <div class="steps">
-    <div class="step reveal"><div class="num">1</div><h3>Télécharge</h3><p>Récupère <b>Vault.exe</b> depuis le bouton. Rien à installer, rien à configurer.</p></div>
-    <div class="step reveal"><div class="num">2</div><h3>Lance</h3><p>Ouvre Vault avant Rocket League. Il détecte ton jeu et se connecte tout seul.</p></div>
-    <div class="step reveal"><div class="num">3</div><h3>Joue</h3><p>Stats, overlays, personnalisation et parties à distance — tout est à un clic dans la fenêtre.</p></div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="sec wrap" id="faq">
-  <p class="eyebrow reveal">FAQ</p>
-  <h2 class="reveal">Les questions fréquentes</h2>
-  <div class="faq" style="margin-top:36px">
-    <details class="qa reveal"><summary>Est-ce que c'est gratuit ?<span class="pm">+</span></summary><div class="a">Oui, entièrement. Vault se télécharge et s'utilise gratuitement, sans compte payant.</div></details>
-    <details class="qa reveal"><summary>C'est un cheat ? Je risque un ban ?<span class="pm">+</span></summary><div class="a">Non. La personnalisation (pseudo, rank, objets, titres) est <b>purement cosmétique et locale</b> : elle ne change que ce que TU vois sur ton écran, jamais ton compte ni ce que voient les autres joueurs en ligne.</div></details>
-    <details class="qa reveal"><summary>Comment marche le jeu à distance ?<span class="pm">+</span></summary><div class="a">Vault utilise le vrai mode LAN de Rocket League. Il crée une carte réseau virtuelle et perce les NAT en pair-à-pair, pour que le jeu voie tes amis comme sur un réseau local — même à distance. L'installation du réseau se fait une seule fois.</div></details>
-    <details class="qa reveal"><summary>Faut-il installer quelque chose ?<span class="pm">+</span></summary><div class="a">Un seul fichier, <b>Vault.exe</b>. Aucune installation. Le réseau virtuel demande une autorisation Windows une seule fois, à la première utilisation du jeu à distance.</div></details>
-    <details class="qa reveal"><summary>Ça marche sur Epic et Steam ?<span class="pm">+</span></summary><div class="a">Oui, les deux. Vault détecte automatiquement ton installation.</div></details>
-  </div>
-</section>
-
-<!-- DOWNLOAD -->
-<section class="sec wrap" id="download">
-  <div class="dl reveal">
-    <h2>Prends l'avantage. Gratuitement.</h2>
-    <p>Un seul <b>.exe</b>, rien à installer. Stats, overlays, coaching, personnalisation et parties à distance en LAN virtuel.</p>
-    <div class="hero-cta" style="margin-bottom:0">
-      <a class="btn btn-primary" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-        Télécharger Vault
-      </a>
-      <a class="btn btn-ghost" href="https://discord.gg/w6pkd4WzJa">Rejoindre le Discord</a>
-    </div>
-    <div class="hero-meta">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 100 % gratuit</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Sans installation</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Mises à jour automatiques</span>
-    </div>
-
-    <!-- Vault n'est pas signe par un certificat payant : Windows le signale au
-         premier lancement. Le dire ici transforme un « c'est un virus ? » en
-         « ah, c'est prevu ». L'empreinte donnee a cote rend l'affirmation
-         verifiable au lieu d'etre une simple promesse. -->
-    <div class="dl-note">
-      <h3>Windows affichera un avertissement au premier lancement</h3>
-      <p>Vault n'est pas signé par un certificat payant, alors Windows affiche
-        <b>« Windows a protégé votre ordinateur »</b>. C'est attendu et sans danger :
-        clique sur <b>Informations complémentaires</b>, puis sur
-        <b>Exécuter quand même</b>. Les mises à jour suivantes se font en silence,
-        sans jamais réafficher ce message.</p>
-      <p class="dl-hash">Empreinte SHA-256 du fichier, <span id="dl-version">version 1.6.5</span> —
-        à comparer avec <code>Get-FileHash Vault.exe</code><br>
-        <code id="dl-sha">067a6753db2f591204ceb7668cf89f33c7d50d013761cfed1a0d01be9abf36df</code></p>
-    </div>
-  </div>
-</section>
-
-<footer>
+<!-- ═══ INTEGRATIONS ════════════════════════════════════════════════════ -->
+<section class="logos">
   <div class="wrap">
-    <div class="foot">
-      <a href="#top" class="logo"><img class="logo-mark" src="vault-logo.png" alt="Vault" width="34" height="34"><b>Vault<span class="dot">.</span></b></a>
-      <div class="foot-links">
-        <a href="#lan">Jouer à distance</a>
-        <a href="#modules">Modules</a>
-        <a href="#features">Personnalisation</a>
-        <a href="#faq">FAQ</a>
-        <a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">Télécharger</a>
-        <a href="https://discord.gg/w6pkd4WzJa">Discord</a>
+    <h2>Vault se branche sur les outils que tu utilises déjà.</h2>
+    <div class="logos-row">
+      <span>BakkesMod</span><span>OBS Studio</span><span>start.gg</span>
+      <span>ballchasing</span><span>tracker.gg</span><span>RocketStats</span>
+      <span>Discord</span><span>Steam · Epic</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ JOUER A DISTANCE ════════════════════════════════════════════════ -->
+<section class="sec" id="lan">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        LAN virtuel
+      </p>
+      <h2 class="balance">Joue avec tes amis, <span class="grad">où qu'ils soient</span></h2>
+      <p>
+        Rocket League réserve certaines parties privées au réseau local. Vault monte un
+        LAN virtuel entre vos machines : le jeu croit que vous êtes dans la même pièce.
+      </p>
+    </div>
+
+    <div class="lan-diagram">
+      <div class="lan-node">
+        <span class="lan-avatar" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5AB3FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </span>
+        <b>Toi</b>
+        <span>Ton réseau</span>
+      </div>
+
+      <div class="lan-link" aria-hidden="true">
+        <span class="lan-link-line"></span>
+        <span class="lan-link-dot"></span>
+        <span class="lan-link-tag">tunnel Vault</span>
+      </div>
+
+      <div class="lan-node">
+        <span class="lan-avatar" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFB067" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </span>
+        <b>Tes amis</b>
+        <span>N'importe où</span>
       </div>
     </div>
-    <p class="foot-note">Vault est un outil communautaire gratuit pour Rocket League. La personnalisation est locale et cosmétique. Vault n'est pas affilié à Psyonix ou Epic Games.</p>
+
+    <div class="lan-points">
+      <div class="lan-point">
+        <b>Rien à configurer</b>
+        <span>Pas de redirection de port, pas d'adresse IP à s'échanger. Un code de salon suffit.</span>
+      </div>
+      <div class="lan-point">
+        <b>Les maps Workshop aussi</b>
+        <span>Entraînement, freeplay custom, maps de la communauté — tout ce qui tourne en local passe.</span>
+      </div>
+      <div class="lan-point">
+        <b>Rien n'est injecté</b>
+        <span>Vault n'écrit pas dans le jeu. Il ne fait que router le trafic entre vos machines.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BENTO DES FONCTIONNALITES ═══════════════════════════════════════ -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Ce que Vault fait
+      </p>
+      <h2 class="balance">Une app, <span class="grad">vingt et un outils</span></h2>
+      <p>
+        Vault remplace la pile d'outils qu'on finit tous par accumuler autour de
+        Rocket League. Tout est au même endroit, et tout parle à la même partie.
+      </p>
+    </div>
+    <div class="bento" id="bento"></div>
+  </div>
+</section>
+
+<!-- ═══ PARALLAXE / OVERLAYS ════════════════════════════════════════════ -->
+<section class="plx" id="overlays">
+  <div class="plx-layer plx-1" data-speed="0.25" aria-hidden="true"></div>
+  <div class="plx-layer plx-2" data-speed="0.55" id="starfield" aria-hidden="true"></div>
+  <div class="plx-layer plx-3" data-speed="1.2">
+    <div>
+      <h2 class="balance">Ton stream, <span class="grad">lisible au premier coup d'œil</span></h2>
+      <p>
+        Sept overlays prêts à coller dans OBS. Ils lisent la même partie que l'app,
+        donc ils ne se désynchronisent jamais du score affiché à l'écran.
+      </p>
+      <p style="margin-top:32px"><a class="pearl pearl-team pearl-lg" href="#download"><span>Essayer les overlays</span></a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SIDEBAR + PILE DE CARTES ════════════════════════════════════════ -->
+<section class="sec" id="workshop">
+  <div class="wrap split">
+    <div>
+      <h2 class="balance" style="font-size:clamp(26px,3.6vw,40px);line-height:1.12">
+        Vingt et une vues,<br><span class="grad">une seule barre latérale</span>
+      </h2>
+      <p style="margin-top:16px;max-width:46ch;color:var(--text-dim)">
+        Tout ce que Vault sait faire tient dans une colonne repliable, avec une
+        recherche en tête. Pas de menus imbriqués, pas de fenêtres qui s'empilent.
+      </p>
+      <div style="margin-top:32px">
+        <nav class="sb" id="sb" aria-label="Aperçu de la navigation de Vault">
+          <div class="sb-head">
+            <a class="brand" href="#top" style="font-size:15px">
+              <svg width="20" height="20" viewBox="0 0 512 512" aria-hidden="true"><use href="#vault-mark"/></svg>
+              <span class="sb-brand-label">Vault<i class="dot">.</i></span>
+            </a>
+            <button class="sb-toggle" id="sb-toggle" aria-label="Replier la navigation" aria-expanded="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="sb-search">
+            <div class="sb-search-in">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="m10.2 10.2 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input type="search" id="sb-search" placeholder="Rechercher…" aria-label="Rechercher dans la navigation">
+            </div>
+          </div>
+          <div class="sb-list" id="sb-list"></div>
+          <div class="sb-foot">
+            <span class="sb-avatar" aria-hidden="true"></span>
+            <div><b>Ton compte</b><i>Steam · Epic</i></div>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+    <div>
+      <div class="stack" id="stack"></div>
+      <div class="stack-dots" id="stack-dots" role="tablist" aria-label="Cartes"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═════════════════════════════════════════════════════════════ -->
+<section class="sec" id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Les questions fréquentes
+      </p>
+      <h2 class="balance">Ce qu'on nous demande <span class="grad">le plus souvent</span></h2>
+    </div>
+
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>
+          Est-ce que c'est gratuit ?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="faq-answer">
+          Oui, entièrement. Tous les modules, toutes les mises à jour, sans licence ni
+          abonnement. Il n'y a pas de version payante à débloquer. Si Vault te sert, le
+          meilleur soutien reste de venir sur le Discord signaler ce qui cloche.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          C'est un cheat ? Je risque un ban ?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="faq-answer">
+          Non. Vault ne modifie pas le jeu et n'injecte rien dedans. La personnalisation
+          est purement cosmétique et purement locale : tes objets, ton pseudo affiché et
+          ton rang ne changent que sur TON écran. Personne d'autre ne les voit, et rien
+          n'est envoyé aux serveurs de Psyonix. Aucun avantage en jeu n'est procuré.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          Comment marche le jeu à distance ?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="faq-answer">
+          Vault crée un réseau local virtuel entre les machines connectées au même salon.
+          Rocket League voit un LAN ordinaire et autorise les parties privées qu'il
+          réserve normalement au réseau local. Aucune redirection de port n'est
+          nécessaire.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          Faut-il installer quelque chose ?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="faq-answer">
+          Un seul fichier .exe, rien d'autre. Pas d'installateur, pas de dépendance à
+          télécharger séparément, pas de plugin à poser dans le dossier du jeu. Tu le
+          lances, il détecte Rocket League tout seul.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          Ça marche sur Epic et Steam ?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="faq-answer">
+          Les deux. Vault trouve l'installation quelle que soit la plateforme, et suit le
+          compte actif de chacune séparément — changer de compte ne mélange pas les
+          historiques.
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TELECHARGEMENT ══════════════════════════════════════════════════ -->
+<section class="sec" id="download">
+  <div class="wrap">
+    <div class="card dl" style="min-height:0;justify-content:flex-start">
+      <svg width="48" height="48" viewBox="0 0 512 512" style="margin:0 auto 20px" aria-hidden="true"><use href="#vault-mark"/></svg>
+      <h2 class="balance">Installe Vault, lance une partie.</h2>
+      <p>Vault détecte Rocket League tout seul et commence à suivre au premier coup d'envoi. Rien à configurer.</p>
+      <div class="dl-actions">
+        <a class="pearl pearl-light pearl-lg" href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe"><span>Télécharger pour Windows</span></a>
+        <a class="pearl pearl-ghost pearl-lg" href="https://discord.gg/w6pkd4WzJa" target="_blank" rel="noopener"><span>Rejoindre le Discord</span></a>
+      </div>
+      <p class="dl-fine">Un seul .exe · Windows 10/11 · gratuit · sans publicité</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══ PIED DE PAGE ════════════════════════════════════════════════════ -->
+<footer class="ftr" id="ftr">
+  <div class="ftr-aurora" aria-hidden="true"><i></i><i></i></div>
+  <div class="wrap">
+
+    <div class="ftr-cta reveal">
+      <div>
+        <h3>Une question, une idée, un bug ?</h3>
+        <p>Le Discord est l'endroit le plus rapide pour avoir une réponse.</p>
+      </div>
+      <button class="magnetic" id="magnet" type="button"
+              onclick="window.open('https://discord.gg/w6pkd4WzJa','_blank','noopener')">
+        Rejoindre le Discord
+      </button>
+    </div>
+
+    <div class="ftr-cols">
+      <div class="reveal">
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="#lan">Jouer à distance</a></li>
+          <li><a href="#features">Modules</a></li>
+          <li><a href="#overlays">Overlays</a></li>
+          <li><a href="https://github.com/Esquie-rl/Vault/releases/download/Vault/Vault.exe">Télécharger</a></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <h4>Ressources</h4>
+        <ul>
+          <li><a href="/tiktok">Patch TikTok</a></li>
+          <li><a href="https://vault-rl.com/#top" target="_blank" rel="noopener">vault-rl.com</a></li>
+          <li><a href="https://github.com/Esquie-rl/Vault/releases" target="_blank" rel="noopener">Versions</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <h4>Communauté</h4>
+        <ul>
+          <li><a href="https://discord.gg/w6pkd4WzJa" target="_blank" rel="noopener">Discord</a></li>
+          <li><a href="https://github.com/Esquie-rl/Vault" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/Esquie-rl/Vault/issues" target="_blank" rel="noopener">Signaler un bug</a></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/#about">Confidentialité</a></li>
+          <li><a href="/#about">Licences</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ftr-mark" id="ftr-mark" aria-hidden="true"><span>VAULT</span></div>
+
+    <div class="ftr-legal reveal">
+      <p>© <span id="year"></span> Vault. Projet indépendant, sans lien avec Psyonix ni Epic Games.</p>
+      <div class="ftr-social">
+        <a href="https://discord.gg/w6pkd4WzJa" target="_blank" rel="noopener" aria-label="Discord">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </a>
+      </div>
+    </div>
   </div>
 </footer>
 
 <script>
-// Version et empreinte affichees a cote du telechargement : lues dans le MEME
-// manifeste signe que celui que consulte l'auto-update. Les recopier a la main
-// dans ce fichier les condamnerait a devenir fausses des la publication suivante
-// — et une empreinte fausse affichee a cote d'un binaire est pire que pas
-// d'empreinte du tout. Les valeurs ecrites dans le HTML servent de repli si la
-// requete echoue (reseau coupe, ou en-tete CORS pas encore deploye).
-(function () {
-  const elV = document.getElementById('dl-version');
-  const elS = document.getElementById('dl-sha');
-  if (!elV || !elS || !window.fetch) return;
-  fetch('https://rl-license-server.esquie.workers.dev/version', { cache: 'no-store' })
-    .then(r => (r.ok ? r.json() : null))
-    .then(d => {
-      if (!d || !d.update) return;
-      // Jeton = « charge utile base64url » + "." + « signature ». Seule la charge
-      // utile nous interesse ici ; la signature est verifiee par l'application.
-      let p = d.update.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
-      while (p.length % 4) p += '=';
-      const bin = atob(p);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const o = JSON.parse(new TextDecoder().decode(bytes));
-      if (o.version) elV.textContent = 'version ' + o.version;
-      if (o.sha256) elS.textContent = o.sha256;
-    })
-    .catch(() => { /* repli : les valeurs ecrites dans le HTML restent affichees */ });
+"use strict";
+/* =======================================================================
+   VAULT — LANDING, comportements
+   -----------------------------------------------------------------------
+   Un seul rAF pilote tout ce qui depend du defilement (en-tete, parallaxe,
+   wordmark). Trois ecouteurs de scroll independants, c'est trois lectures
+   de scrollY par image et autant d'occasions de forcer un reflow.
+   ======================================================================= */
+
+var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* -- Icones ------------------------------------------------------------- */
+function icon(d, extra) {
+  // width/height par defaut : un SVG sans dimension ET sans regle CSS s'etire
+  // jusqu'a remplir son conteneur. Avec ces attributs, un emplacement qui
+  // oublie sa regle affiche une icone de 24px -- pas une icone plein ecran.
+  // Le CSS reste prioritaire : une declaration bat un attribut de presentation.
+  return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+       + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+       + d + (extra || '') + '</svg>';
+}
+var ICONS = {
+  chart:   icon('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),
+  monitor: icon('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'),
+  layers:  icon('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
+  board:   icon('<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M6 13l4-4 3 3 5-5"/>'),
+  car:     icon('<path d="M5 17h14M6 17v2M18 17v2"/><path d="M3 13l2-6h14l2 6v4H3v-4z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>'),
+  trophy:  icon('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'),
+  video:   icon('<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>'),
+  music:   icon('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),
+  wand:    icon('<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h0M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/>'),
+  radio:   icon('<circle cx="12" cy="12" r="2"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48"/>')
+};
+
+/* -- Fonds de tuile -----------------------------------------------------
+   Des visuels abstraits plutot que dix captures d'ecran : ils suggerent la
+   fonctionnalite et ne vieilliront pas a la prochaine refonte de l'app. */
+var BG = {
+  mmr:
+    '<svg viewBox="0 0 400 160" preserveAspectRatio="none" style="width:100%;height:100%">'
+    + '<defs><linearGradient id="mmrf" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0" stop-color="#5AB3FF" stop-opacity=".35"/>'
+    + '<stop offset="1" stop-color="#5AB3FF" stop-opacity="0"/></linearGradient></defs>'
+    + '<path d="M0 130 L40 118 L80 124 L120 96 L160 104 L200 72 L240 80 L280 48 L320 56 L360 26 L400 34 L400 160 L0 160 Z" fill="url(#mmrf)"/>'
+    + '<path d="M0 130 L40 118 L80 124 L120 96 L160 104 L200 72 L240 80 L280 48 L320 56 L360 26 L400 34" fill="none" stroke="#5AB3FF" stroke-width="2" stroke-linejoin="round"/></svg>',
+
+  overlay: (function () {
+    var s = '<div style="position:absolute;left:24px;right:24px;top:24px;display:grid;gap:8px">';
+    for (var i = 0; i < 3; i++) {
+      s += '<div style="height:40px;border:1px solid rgba(255,255,255,.1);border-radius:10px;'
+         + 'background:rgba(255,255,255,.03);transform:translateX(' + (i * 14) + 'px) scale(' + (1 - i * 0.05) + ');'
+         + 'opacity:' + (1 - i * 0.28) + '"></div>';
+    }
+    return s + '</div>';
+  })(),
+
+  workshop: (function () {
+    var s = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:24px">';
+    for (var i = 0; i < 12; i++) {
+      s += '<div style="aspect-ratio:16/9;border:1px solid rgba(255,255,255,.07);border-radius:6px;'
+         + 'background:linear-gradient(135deg,rgba(255,255,255,.06),transparent)"></div>';
+    }
+    return s + '</div>';
+  })(),
+
+  coach:
+    '<svg viewBox="0 0 300 180" style="width:100%;height:100%;padding:24px">'
+    + '<rect x="10" y="10" width="280" height="160" rx="28" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>'
+    + '<line x1="150" y1="10" x2="150" y2="170" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>'
+    + '<circle cx="150" cy="90" r="26" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>'
+    + '<path d="M60 130 Q110 60 150 90 T240 55" fill="none" stroke="#FFB067" stroke-width="2" stroke-dasharray="5 4"/>'
+    + '<circle cx="60" cy="130" r="5" fill="#5AB3FF"/><circle cx="240" cy="55" r="4.5" fill="#F26A0A"/></svg>',
+
+  cosmetics: (function () {
+    var cs = ['#5AB3FF','#F26A0A','#9B99FE','#2BC8B7','#FFB067','#1E7FE6','#e35d6a','#7dd3a0','#c084fc','#facc15'];
+    var s = '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:24px">';
+    for (var i = 0; i < cs.length; i++) {
+      s += '<span style="width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);'
+         + 'background:' + cs[i] + ';opacity:.8"></span>';
+    }
+    return s + '</div>';
+  })(),
+
+  bracket:
+    '<svg viewBox="0 0 260 150" style="width:100%;height:100%;padding:24px">'
+    + '<rect x="10" y="12" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="10" y="46" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="10" y="80" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="10" y="114" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="105" y="29" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="105" y="97" width="70" height="22" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)"/>'
+    + '<rect x="185" y="63" width="65" height="22" rx="5" fill="rgba(90,179,255,.12)" stroke="rgba(90,179,255,.4)"/></svg>',
+
+  glow: function (c) {
+    return '<div style="position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 0%,' + c + ',transparent 70%)"></div>';
+  }
+};
+
+/* -- Le catalogue -------------------------------------------------------
+   L'ordre et les tailles ne sont pas decoratifs : les grandes tuiles sont
+   ce que les gens installent Vault pour faire. */
+var FEATURES = [
+  { icon: ICONS.chart,   name: 'Stats et MMR en direct',
+    desc: 'Chaque but, arrêt, centre et démo enregistré en temps réel. MMR par mode, historique complet, courbes par session, jour, semaine ou saison.',
+    cta: 'Voir les stats', bg: BG.mmr, cls: 'b-2col' },
+  { icon: ICONS.monitor, name: 'Overlays OBS',
+    desc: 'Barre de stats, badge de rang, tableau des scores, habillage broadcast, manette à l’écran. Une URL à coller dans une source navigateur.',
+    cta: 'Configurer', bg: BG.overlay, cls: 'b-2row' },
+  { icon: ICONS.layers,  name: 'Workshop Maps',
+    desc: 'Le catalogue complet, téléchargeable et lançable depuis Vault. Plus de dossiers à renommer à la main.',
+    cta: 'Parcourir', bg: BG.workshop, cls: 'b-2col' },
+  { icon: ICONS.board,   name: 'Coaching',
+    desc: 'Tableau tactique : place les voitures, trace les courses, rejoue la phase.',
+    cta: 'Ouvrir', bg: BG.coach, cls: '' },
+  { icon: ICONS.car,     name: 'Cosmétiques',
+    desc: 'Caisse, roues, boost, explosion, antenne, décals personnalisés, balle et arène sur mesure.',
+    cta: 'Personnaliser', bg: BG.cosmetics, cls: '' },
+  { icon: ICONS.trophy,  name: 'Tournois',
+    desc: 'Brackets start.gg suivis en direct, scores poussés depuis la partie.',
+    cta: 'Connecter', bg: BG.bracket, cls: '' },
+  { icon: ICONS.video,   name: 'Replays',
+    desc: 'Analyse ballchasing en un clic, directement depuis l’historique des matchs.',
+    cta: 'Analyser', bg: BG.glow('rgba(155,153,254,.16)'), cls: '' },
+  { icon: ICONS.music,   name: 'Sons et Quick Chat',
+    desc: 'Remplace les sons du jeu, écris tes propres quick chats.',
+    cta: 'Modifier', bg: BG.glow('rgba(43,200,183,.16)'), cls: '' },
+  { icon: ICONS.wand,    name: 'Habillage du jeu',
+    desc: 'Écran de chargement, fond de menu, bandeau MotD, arènes — tout se remplace.',
+    cta: 'Explorer', bg: BG.glow('rgba(242,106,10,.16)'), cls: '' }
+];
+
+/* -- Rendu du bento ------------------------------------------------------ */
+(function buildBento() {
+  var host = document.getElementById('bento');
+  if (!host) return;
+  var frag = document.createDocumentFragment();
+
+  FEATURES.forEach(function (f) {
+    var el = document.createElement('article');
+    el.className = 'card ' + f.cls;
+    el.innerHTML =
+        '<div class="card-bg">' + f.bg + '</div>'
+      + '<div class="card-body">'
+      +   '<span class="card-icon">' + f.icon + '</span>'
+      +   '<h3>' + f.name + '</h3>'
+      +   '<p>' + f.desc + '</p>'
+      + '</div>'
+      + '<div class="card-cta"><a href="#download">' + f.cta
+      +   ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
+      + '</a></div>';
+    frag.appendChild(el);
+  });
+  host.appendChild(frag);
 })();
 
-// nav : etat scrolled + menu mobile
-const nav = document.getElementById('nav');
-addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 12), {passive:true});
-const burger = document.getElementById('burger'), links = document.getElementById('navlinks');
-burger.addEventListener('click', () => links.classList.toggle('open'));
-links.addEventListener('click', e => { if (e.target.tagName === 'A') links.classList.remove('open'); });
+/* -- Spotlight au survol -------------------------------------------------
+   Delegue sur le conteneur : un seul ecouteur pour toutes les cartes, et
+   l'ecriture est calee sur rAF — un mousemove peut arriver plus souvent
+   qu'une image, inutile de toucher le style entre deux. */
+(function spotlight() {
+  if (REDUCED) return;
+  var pending = null, target = null, px = 0, py = 0;
 
-// reveal au scroll
-const io = new IntersectionObserver((entries) => {
-  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
-}, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
-document.querySelectorAll('.reveal').forEach((el,i) => {
-  el.style.transitionDelay = Math.min(i*40, 240) + 'ms';
-  io.observe(el);
-});
+  function flush() {
+    pending = null;
+    if (!target) return;
+    target.style.setProperty('--sx', px + 'px');
+    target.style.setProperty('--sy', py + 'px');
+  }
+
+  document.addEventListener('mousemove', function (e) {
+    var card = e.target.closest ? e.target.closest('.card') : null;
+    if (!card) { target = null; return; }
+    var r = card.getBoundingClientRect();
+    target = card; px = e.clientX - r.left; py = e.clientY - r.top;
+    if (pending === null) pending = requestAnimationFrame(flush);
+  }, { passive: true });
+})();
+
+/* -- Barre laterale ------------------------------------------------------ */
+var NAV = [
+  { title: 'Partie', items: [
+    { id: 'live',    label: 'Match',           icon: ICONS.radio },
+    { id: 'charts',  label: 'Charts',          icon: ICONS.chart },
+    { id: 'replays', label: 'Replays',         icon: ICONS.video },
+    { id: 'coach',   label: 'Coaching',        icon: ICONS.board },
+    { id: 'startgg', label: 'Tournois',        icon: ICONS.trophy }
+  ]},
+  { title: 'Personnalisation', items: [
+    { id: 'cosmetics', label: 'Cosmetics',     icon: ICONS.car },
+    { id: 'decal',     label: 'Custom Decals', icon: ICONS.wand },
+    { id: 'menubg',    label: 'Fond du menu',  icon: ICONS.layers },
+    { id: 'sounds',    label: 'Custom Sounds', icon: ICONS.music }
+  ]},
+  { title: 'Diffusion', items: [
+    { id: 'overlays', label: 'Overlays',      icon: ICONS.monitor, badge: 7 },
+    { id: 'workshop', label: 'Workshop Maps', icon: ICONS.layers }
+  ]}
+];
+
+(function buildSidebar() {
+  var list = document.getElementById('sb-list');
+  var sb = document.getElementById('sb');
+  var toggle = document.getElementById('sb-toggle');
+  var search = document.getElementById('sb-search');
+  if (!list || !sb) return;
+
+  var active = 'live';
+
+  function render(query) {
+    var q = (query || '').trim().toLowerCase();
+    var html = '';
+    NAV.forEach(function (group) {
+      // Un groupe sans resultat disparait ENTIEREMENT : garder son titre
+      // orphelin donne l'impression que la recherche est cassee.
+      var items = group.items.filter(function (i) {
+        return !q || i.label.toLowerCase().indexOf(q) !== -1;
+      });
+      if (!items.length) return;
+      html += '<div class="sb-group">' + group.title + '</div>';
+      items.forEach(function (i) {
+        html += '<div class="sb-item' + (i.id === active ? ' is-active' : '') + '" '
+              + 'data-id="' + i.id + '" role="button" tabindex="0" title="' + i.label + '">'
+              + i.icon + '<span>' + i.label + '</span>'
+              + (i.badge ? '<span class="sb-badge">' + i.badge + '</span>' : '')
+              + '</div>';
+      });
+    });
+    list.innerHTML = html || '<p style="padding:24px 12px;text-align:center;font-size:12px;color:var(--text-faint)">Aucun résultat.</p>';
+  }
+
+  list.addEventListener('click', function (e) {
+    var item = e.target.closest('.sb-item');
+    if (!item) return;
+    active = item.dataset.id;
+    // On repose la classe a la main plutot que de tout re-rendre : re-rendre
+    // effacerait le champ de recherche en cours de frappe.
+    list.querySelectorAll('.sb-item').forEach(function (n) {
+      n.classList.toggle('is-active', n === item);
+    });
+  });
+
+  if (search) search.addEventListener('input', function () { render(search.value); });
+
+  if (toggle) toggle.addEventListener('click', function () {
+    var collapsed = sb.classList.toggle('is-collapsed');
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed ? 'Déplier la navigation' : 'Replier la navigation');
+    var lbl = sb.querySelector('.sb-brand-label');
+    if (lbl) lbl.style.display = collapsed ? 'none' : '';
+  });
+
+  render('');
+})();
+
+/* -- Aperçu de nav dans la capture du hero ------------------------------- */
+(function buildShotNav() {
+  var host = document.getElementById('shot-nav');
+  if (!host) return;
+  var html = '';
+  for (var i = 0; i < 12; i++) {
+    html += '<div class="appframe-row"><b></b><i style="width:' + (45 + (i * 13) % 45) + '%"></i></div>';
+  }
+  host.innerHTML = html;
+})();
+
+/* -- Pile de cartes ------------------------------------------------------
+   Seules les trois premieres sont montees : empiler neuf cartes cachees
+   derriere les autres ne coute que de la composition inutile. */
+var STACK = [
+  { icon: ICONS.chart,   color: '#5AB3FF', title: 'Chaque match compte, même les mauvais',
+    text: 'Vault enregistre buts, arrêts, centres, démos et touches sans que tu aies à lancer quoi que ce soit. L’historique remonte à ta première partie suivie.' },
+  { icon: ICONS.monitor, color: '#FFB067', title: 'Prêt pour le stream en deux minutes',
+    text: 'Une URL par overlay, à coller dans une source navigateur OBS. Position, échelle et opacité se règlent depuis l’app, en direct.' },
+  { icon: ICONS.layers,  color: '#9B99FE', title: 'Le workshop sans la paperasse',
+    text: 'Télécharge, installe et lance une map depuis Vault. Et invite tes amis dessus, en ligne, sans monter un tunnel à la main.' }
+];
+
+(function buildStack() {
+  var host = document.getElementById('stack');
+  var dots = document.getElementById('stack-dots');
+  if (!host) return;
+
+  var DEPTH = Math.min(3, STACK.length);
+  var index = 0, timer = null;
+
+  var nodes = STACK.map(function (s) {
+    var el = document.createElement('article');
+    el.className = 'stack-card';
+    el.innerHTML = '<span style="color:' + s.color + '">' + s.icon + '</span>'
+                 + '<div><h3>' + s.title + '</h3><p>' + s.text + '</p></div>';
+    host.appendChild(el);
+    return el;
+  });
+
+  var dotNodes = STACK.map(function (_, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Carte ' + (i + 1) + ' sur ' + STACK.length);
+    b.addEventListener('click', function () { go(i); });
+    if (dots) dots.appendChild(b);
+    return b;
+  });
+
+  function paint() {
+    nodes.forEach(function (el, i) {
+      // Profondeur cyclique : 0 = carte du dessus. Au-dela de DEPTH la carte
+      // est sortie du flux visuel (opacite 0, non cliquable).
+      var d = (i - index + STACK.length) % STACK.length;
+      var inStack = d < DEPTH;
+      el.style.transform = 'translate3d(0,' + (d * 16) + 'px,0) scale(' + (1 - d * 0.05) + ')';
+      el.style.opacity = inStack ? '1' : '0';
+      el.style.zIndex = String(DEPTH - d);
+      el.style.pointerEvents = d === 0 ? 'auto' : 'none';
+    });
+    dotNodes.forEach(function (b, i) { b.classList.toggle('is-active', i === index); });
+  }
+
+  function go(i) { index = ((i % STACK.length) + STACK.length) % STACK.length; paint(); restart(); }
+  function next() { go(index + 1); }
+
+  function restart() {
+    if (timer) clearInterval(timer);
+    if (REDUCED) return;               // une pile qui tourne seule, c'est exactement ce que ce reglage vise
+    timer = setInterval(function () { go(index + 1); }, 6000);
+  }
+
+  nodes.forEach(function (el) { el.addEventListener('click', next); });
+  host.addEventListener('mouseenter', function () { if (timer) clearInterval(timer); });
+  host.addEventListener('mouseleave', restart);
+
+  paint();
+  restart();
+})();
+
+/* -- Champ d'etoiles ----------------------------------------------------- */
+(function starfield() {
+  var host = document.getElementById('starfield');
+  if (!host) return;
+  var html = '';
+  for (var i = 0; i < 70; i++) {
+    // Positions deterministes : elles doivent etre les memes a chaque
+    // chargement, sinon le fond « bouge » entre deux visites sans raison.
+    var size = (i % 3) + 1;
+    html += '<span class="plx-star" style="left:' + ((i * 37.7) % 100) + '%;top:' + ((i * 61.3) % 100)
+          + '%;width:' + size + 'px;height:' + size + 'px;opacity:' + (0.15 + ((i * 7) % 40) / 100) + '"></span>';
+  }
+  host.innerHTML = html;
+})();
+
+/* -- Bouton magnetique ---------------------------------------------------
+   Le suivi ecrit directement le transform. Hors du rayon on rentre au
+   centre : sans ce retour, le bouton reste collé à sa dernière position
+   quand la souris quitte la zone d'un coup. */
+(function magnetic() {
+  var btn = document.getElementById('magnet');
+  if (!btn || REDUCED) return;
+  var RADIUS = 110, STRENGTH = 0.32;
+  var pending = null, tx = 0, ty = 0;
+
+  function flush() {
+    pending = null;
+    btn.style.transform = 'translate3d(' + tx + 'px,' + ty + 'px,0)';
+  }
+
+  window.addEventListener('mousemove', function (e) {
+    var r = btn.getBoundingClientRect();
+    var dx = e.clientX - (r.left + r.width / 2);
+    var dy = e.clientY - (r.top + r.height / 2);
+    if (Math.sqrt(dx * dx + dy * dy) > RADIUS + Math.max(r.width, r.height) / 2) {
+      if (tx === 0 && ty === 0) return;
+      tx = 0; ty = 0;
+    } else {
+      tx = dx * STRENGTH; ty = dy * STRENGTH;
+    }
+    if (pending === null) pending = requestAnimationFrame(flush);
+  }, { passive: true });
+})();
+
+/* -- Reveals au defilement ----------------------------------------------- */
+(function reveals() {
+  var nodes = document.querySelectorAll('.reveal');
+  if (!nodes.length) return;
+  if (REDUCED || !('IntersectionObserver' in window)) {
+    nodes.forEach(function (n) { n.classList.add('is-in'); });
+    return;
+  }
+  var seen = 0;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      // La cascade : chaque element revele prend un cran de retard sur le
+      // precedent. On arrete de compter apres huit, sinon le dernier bloc
+      // attendrait une seconde entiere.
+      entry.target.style.transitionDelay = Math.min(seen++, 8) * 70 + 'ms';
+      entry.target.classList.add('is-in');
+      io.unobserve(entry.target);   // le pied de page ne se rejoue pas a chaque aller-retour
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+  nodes.forEach(function (n) { io.observe(n); });
+})();
+
+/* -- Menu mobile ---------------------------------------------------------- */
+(function mobileMenu() {
+  var burger = document.getElementById('burger');
+  var panel = document.getElementById('hdr-panel');
+  if (!burger || !panel) return;
+
+  function setOpen(open) {
+    panel.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+  }
+  burger.addEventListener('click', function () { setOpen(!panel.classList.contains('is-open')); });
+  panel.addEventListener('click', function (e) { if (e.target.tagName === 'A') setOpen(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+})();
+
+/* -- LA boucle de defilement ---------------------------------------------
+   En-tete, parallaxe et wordmark partagent un seul rAF et une seule lecture
+   de scrollY. Trois ecouteurs separes liraient la position trois fois par
+   image, chacun risquant de forcer un reflow. */
+(function scrollLoop() {
+  var hdr = document.getElementById('hdr');
+  var plx = document.querySelector('.plx');
+  var layers = plx ? Array.prototype.slice.call(plx.querySelectorAll('.plx-layer')) : [];
+  var mark = document.getElementById('ftr-mark');
+  var running = false;
+  var lastScrolled = null;
+
+  function frame() {
+    running = false;
+    var y = window.pageYOffset;
+    var vh = window.innerHeight;
+
+    // En-tete : on ne touche la classe que quand l'etat CHANGE. classList
+    // .toggle a valeur constante ne redessine rien, mais l'appel a lieu
+    // quand meme — autant l'eviter soixante fois par seconde.
+    if (hdr) {
+      var scrolled = y > 24;
+      if (scrolled !== lastScrolled) {
+        hdr.classList.toggle('is-scrolled', scrolled);
+        lastScrolled = scrolled;
+      }
+    }
+
+    if (!REDUCED && plx && layers.length) {
+      var r = plx.getBoundingClientRect();
+      // Ne calcule que si la scene est a l'ecran (avec une marge d'une demi
+      // hauteur de fenetre pour qu'elle soit deja en place a l'arrivee).
+      if (r.bottom > -vh * 0.5 && r.top < vh * 1.5) {
+        // progress : 0 quand la scene entre par le bas, 1 quand elle sort
+        // par le haut. Centre sur 0 pour que le milieu de la scene soit le
+        // point ou les couches sont alignees.
+        var progress = (vh - r.top) / (vh + r.height) - 0.5;
+        for (var i = 0; i < layers.length; i++) {
+          var speed = parseFloat(layers[i].dataset.speed) || 1;
+          // (1 - speed) : une couche lente monte moins vite que la page,
+          // donc elle descend visuellement. Le signe tombe juste des deux
+          // cotes de 1, sans cas particulier pour les couches « avant ».
+          layers[i].style.transform =
+            'translate3d(0,' + (progress * (1 - speed) * r.height * 0.6).toFixed(2) + 'px,0)';
+        }
+      }
+    }
+
+    if (!REDUCED && mark) {
+      var mr = mark.getBoundingClientRect();
+      if (mr.top < vh && mr.bottom > 0) {
+        var p = 1 - Math.max(0, Math.min(1, mr.top / vh));
+        mark.style.transform = 'translate3d(0,' + ((1 - p) * 24).toFixed(2) + 'px,0)';
+      }
+    }
+  }
+
+  function request() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+  window.addEventListener('scroll', request, { passive: true });
+  window.addEventListener('resize', request, { passive: true });
+  frame();
+})();
+
+/* -- Annee courante ------------------------------------------------------ */
+(function () {
+  var y = document.getElementById('year');
+  if (y) y.textContent = String(new Date().getFullYear());
+})();
 </script>
+
 </body>
 </html>
