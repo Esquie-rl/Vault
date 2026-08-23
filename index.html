@@ -643,7 +643,7 @@ button { font: inherit; color: inherit; }
 .stack-card h3 { font-size: 21px; }
 .stack-card p { margin-top: 12px; font-size: 14px; color: var(--text-mute); }
 .stack-card svg { width: 30px; height: 30px; }
-.stack-dots { position: absolute; left: 0; bottom: -30px; display: flex; gap: 8px; }
+.stack-dots { display: flex; gap: 8px; margin-top: 18px; }
 .stack-dots button {
   height: 6px; width: 6px; padding: 0; border: 0; border-radius: 999px;
   background: rgba(255,255,255,.25); cursor: pointer;
@@ -732,6 +732,72 @@ button { font: inherit; color: inherit; }
    reglage vise. Le JS le lit AUSSI (voir REDUCED plus bas) : couper les
    transitions CSS ne suffit pas a arreter une boucle de scroll.
    ======================================================================= */
+/* =======================================================================
+   MOBILE
+   -----------------------------------------------------------------------
+   Un seul palier, a 760px : au-dela la page tient deja sans retouche.
+   ======================================================================= */
+@media (max-width: 760px) {
+  .wrap { padding: 0 18px; }
+
+  /* Le hero respirait sur 140px de haut : c'est un tiers d'un ecran de
+     telephone depense avant le premier mot. */
+  .hero { padding: 96px 0 0; }
+  .hero h1 { font-size: clamp(30px, 8.5vw, 44px); }
+  .hero-sub { margin-top: 20px; font-size: 16px; }
+  .hero-actions { margin-top: 26px; }
+  /* Les deux boutons cote a cote deviennent illisibles sous 400px. */
+  .hero-actions .pearl { width: 100%; }
+
+  /* -40px remontait la capture PAR-DESSUS la ligne « Windows 10/11 ». Sur
+     bureau elle passe loin sous le texte ; ici le hero est compact, donc le
+     chevauchement est immediat. */
+  .hero-shot { margin-top: 24px; }
+
+  /* 210px de colonne de nav sur ~420px de large, c'est la moitie de la
+     fausse fenetre pour une decoration. */
+  .appframe-body { grid-template-columns: 96px 1fr; }
+  .appframe-main { padding: 10px; gap: 8px; }
+  .appframe-kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .appframe-kpis > div { height: 40px; }
+  .appframe-nav { padding: 8px; }
+
+  .logos { padding: 48px 0; }
+  .logos-row { gap: 14px 26px; margin-top: 28px; }
+  .logos-row span { font-size: 15px; }
+
+  .sec { padding: 64px 0; }
+  .sec-head { margin-bottom: 36px; }
+
+  /* Le diagramme du LAN passe en colonne : le trait horizontal n'a plus de
+     sens empile, on le bascule a la verticale. */
+  .lan-link { min-width: 0; height: 56px; }
+  .lan-link-line { left: 50%; right: auto; top: 0; bottom: 0; width: 1px; height: 100%;
+                   background: linear-gradient(180deg, transparent, var(--blue), var(--orange), transparent); }
+  .lan-link-dot { animation: none; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+  /* L'apercu de la barre laterale etait fige a 264px. */
+  .sb { width: 100%; max-width: 300px; height: 380px; }
+
+  /* Les cartes RESTENT en position:absolute -- c'est le JS qui les empile par
+     transform, les passer dans le flux casserait le carrousel. On donne juste
+     de la hauteur : a 400px le texte de la carte la plus longue debordait de
+     son cadre, et on reduit le rembourrage pour gagner de la place. */
+  .stack { height: 460px; }
+  .stack-card { padding: 24px; }
+  .stack-card h3 { font-size: 18px; }
+  .stack-card p { font-size: 13.5px; }
+
+  .dl { padding: 36px 22px; }
+  .dl-actions .pearl { width: 100%; }
+
+  .faq-item summary { padding: 15px 16px; font-size: 14.5px; }
+  .faq-answer { padding: 0 16px 16px; font-size: 13.5px; }
+
+  .ftr-cta { padding: 44px 0; }
+  .ftr-cols { padding: 44px 0; gap: 32px 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
