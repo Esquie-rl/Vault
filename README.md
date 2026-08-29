@@ -2,7 +2,7 @@
 
 **[vault-rl.com](https://vault-rl.com)** · aussi écrit **VaultRL** ou **Vault RL**
 
-Tout ton Rocket League dans une seule fenêtre : stats en direct, MMR, overlays
+Rocket League dans une seule fenêtre : stats en direct, MMR, overlays
 OBS, personnalisation cosmétique locale, cartes du Workshop, sauvegarde des
 replays — et des parties privées avec tes amis, même à l'autre bout du pays.
 
